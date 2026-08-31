@@ -1,0 +1,58 @@
+{
+  "name": "svgmotion",
+  "version": "0.1.0",
+  "description": "Turn static SVG icons into animations and export them as CSS, SVG, Lottie JSON, React or Vue. Framework-agnostic, runs in the browser and in Node.",
+  "keywords": [
+    "svg",
+    "lottie",
+    "animation",
+    "icon",
+    "bodymovin",
+    "css-animation",
+    "svg-animation",
+    "motion"
+  ],
+  "license": "MIT",
+  "author": "Pinyi Chen",
+  "homepage": "https://github.com/Pinyi333/SVG-to-Lottie-tool#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pinyi333/SVG-to-Lottie-tool.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/Pinyi333/SVG-to-Lottie-tool/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "svg-path-commander": "^2.3.1"
+  },
+  "devDependencies": {
+    "@lottiefiles/lottie-types": "^1.5.0",
+    "@types/node": "^24.13.3",
+    "jsdom": "^28.0.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

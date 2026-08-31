@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">
+  <script>alert('xss')</script>
+  <rect id="safe" x="0" y="0" width="10" height="10" onload="alert(1)" onclick="alert(2)" fill="#000" />
+  <image href="https://example.com/tracker.png" x="0" y="0" width="1" height="1" />
+  <a href="javascript:alert(3)"><circle cx="5" cy="5" r="2" fill="#fff" /></a>
+</svg>
