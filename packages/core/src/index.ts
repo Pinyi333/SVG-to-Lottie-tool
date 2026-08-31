@@ -38,3 +38,5 @@ export {
   trackDuration,
   type AbsoluteKeyframe,
 } from './timeline.js';
+export { toCss, type CssOptions, type CssOutput } from './render/css.js';
+export { toSvg, type SvgOptions } from './render/svg.js';

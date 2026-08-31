@@ -88,6 +88,8 @@ const bounce: PresetDefinition = {
     // any icon size without the caller having to tune it.
     const peak = track.params.height ?? Math.max(node.bbox.height, 1) * 0.25;
 
+    // A keyframe's easing governs the segment leaving it, so the floor
+    // keyframes carry the rise curve and the peaks carry the fall curve.
     const keyframes: Keyframe[] = [{ t: 0, value: 0, easing: EASINGS.easeOut }];
     let height = peak;
     // Each hop takes less time than the last, in proportion to its height.
@@ -99,10 +101,10 @@ const bounce: PresetDefinition = {
     for (let hop = 0; hop < BOUNCE_HOPS; hop += 1) {
       const half = weights[hop]! / totalWeight;
       elapsed += half;
-      // Up: decelerate into the peak.
+      // Leaving the peak means falling, which accelerates.
       keyframes.push({ t: elapsed, value: -height, easing: EASINGS.easeIn });
       elapsed += half;
-      // Down: accelerate into the floor.
+      // Leaving the floor means rising, which decelerates into the next peak.
       keyframes.push({ t: elapsed, value: 0, easing: EASINGS.easeOut });
       height *= BOUNCE_DECAY;
     }
