@@ -1,6 +1,6 @@
 import { subpathsToPathData } from '../parse/geometry.js';
 import { toCssEasing } from '../easing.js';
-import type { Channel, ChannelName, Keyframe } from '../presets/channels.js';
+import type { Channel, Keyframe } from '../presets/channels.js';
 import { CHANNEL_RESTING_VALUE, isTransformChannel } from '../presets/channels.js';
 import { resolveSpec, type ResolvedTrack } from '../spec.js';
 import { cycleCount } from '../timeline.js';

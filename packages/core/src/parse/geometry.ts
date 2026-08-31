@@ -161,6 +161,14 @@ export function toSubpaths(pathData: string, matrix: Matrix): Subpath[] {
     const last = segments[segments.length - 1]!.end;
     const closed = hasCloseCommand || distance(last, start) < EPSILON;
 
+    // When a path already returns to its start before `Z`, `pathToCurve` still
+    // emits a curve for the `Z`, producing a zero-length segment. Left in, it
+    // duplicates a vertex and contributes null tangents on export, so drop it.
+    if (closed && segments.length > 1) {
+      const penultimate = segments[segments.length - 2]!.end;
+      if (distance(penultimate, start) < EPSILON) segments.pop();
+    }
+
     subpaths.push({ start, segments, closed });
   }
 
