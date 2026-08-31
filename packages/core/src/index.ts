@@ -1,2 +1,40 @@
 export * from './types.js';
 export { parseSvg, type ParseOptions } from './parse/index.js';
+export { subpathsToPathData } from './parse/geometry.js';
+export {
+  EASINGS,
+  EASING_NAMES,
+  easing,
+  evaluateEasing,
+  toCssEasing,
+  toLottieHandles,
+  type EasingName,
+} from './easing.js';
+export {
+  PRESETS,
+  PRESET_NAMES,
+  buildTrack,
+  type Channel,
+  type ChannelName,
+  type Keyframe,
+  type PresetDefinition,
+} from './presets/index.js';
+export {
+  animateAll,
+  createSpec,
+  createTrack,
+  resolveSpec,
+  type CreateSpecOptions,
+  type ResolvedSpec,
+  type ResolvedTrack,
+  type TrackOptions,
+} from './spec.js';
+export {
+  cycleCount,
+  cycleDuration,
+  expandChannel,
+  loopsForever,
+  specDuration,
+  trackDuration,
+  type AbsoluteKeyframe,
+} from './timeline.js';
