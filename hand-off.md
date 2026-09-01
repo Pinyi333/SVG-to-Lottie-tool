@@ -28,7 +28,7 @@
 | 項目                                                        | 狀態                                                     |
 | ----------------------------------------------------------- | -------------------------------------------------------- |
 | 核心套件 `svgmotion`                                        | ✅ 完成，179 個測試通過                                  |
-| 網頁 App（Animate + Playground）                            | ✅ 完成，12 個單元測試 + 10 個 e2e 測試通過              |
+| 網頁 App（Animate + Playground）                            | ✅ 完成，17 個單元測試 + 11 個 e2e 測試通過              |
 | v0.2 功能（morph／hover／scroll／漸層／dotLottie）          | ✅ 五項全部完成                                          |
 | 文件（README 中英、CONTRIBUTING、SECURITY、CoC、CHANGELOG） | ✅ 完成                                                  |
 | CI（lint / format / typecheck / test / build / e2e）        | ✅ **全綠**                                              |
@@ -67,7 +67,7 @@ release workflow 會先跑完整測試、確認 tag 與套件版本一致才發�
 
 ### ④ 開 v0.2 roadmap issues
 
-貼 `good first issue` / `help wanted` 標籤。原本列的五項**全部做完了**，所以要開的是新的一批。候選：Playground 支援直接拖入 `.lottie` 封存檔、morph 的 `d: path()` 各瀏覽器相容性實測、Lottie 匯出的 `spreadMethod` 近似改善、`<use>` 展平、dotLottie 多動畫封裝。
+貼 `good first issue` / `help wanted` 標籤。原本列的五項**全部做完了**，Playground 讀 `.lottie` 也順手做掉了，所以要開的是新的一批。候選：Lottie 匯出的 `spreadMethod` 近似改善、`<use>` 展平、dotLottie 多動畫封裝、`<style>` 區塊的 CSS 套用、Firefox／Safari 的 morph 實機驗證（見下）。
 **這是加分項**——公開 roadmap 是「活躍維護」的訊號。
 
 ### ⑤ 錄 demo GIF 放進 README
@@ -112,8 +112,8 @@ pnpm install
 pnpm build        # 必須先 build，apps/web 是吃 core 的建置產物
 pnpm lint
 pnpm typecheck
-pnpm test         # core 179 + web 12
-pnpm test:e2e     # Playwright 10 個，跑在正式建置版本上
+pnpm test         # core 179 + web 17
+pnpm test:e2e     # Playwright 11 個，跑在正式建置版本上
 ```
 
 環境若已有 Chromium：`PLAYWRIGHT_CHROMIUM_PATH=/path/to/chromium pnpm test:e2e`
@@ -133,6 +133,13 @@ pnpm test:e2e     # Playwright 10 個，跑在正式建置版本上
 
 漸層的設計重點（詳見 `docs/lottie-mapping.md`）：**座標保持原樣，把 CTM、bounding box、`gradientTransform` 全部合成到一個 `transform` 矩陣裡**。這樣 SVG／CSS 匯出可以直接把矩陣寫到 `gradientTransform` 上，傾斜與非等比縮放都完全精確；Lottie 只認兩個點，所以只有那裡是近似值，而且會明確警告。
 
+## 已驗證 / 未驗證的事
+
+- **Lottie 匯出的實際畫面**：把 JSON 丟進 lottie-web 截圖比對過，圖形位置正確（這就是抓到 anchor bug 的方法）。
+- **漸層匯出**：原始 SVG 與匯出 SVG 在 Chromium 逐像素比對，除了刻意退回純色的 pattern 方塊之外完全一致。
+- **`.lottie` 封存檔**：用 Python 的 `zipfile`（跟寫檔的 fflate 是完全獨立的實作）驗證過 CRC 與內容都正確。
+- **Morph 的 `d: path()`**：在 **Chromium 141 實測會動**（逐格取 `getComputedStyle(path).d`，數值確實在插值）。**Firefox 與 Safari 尚未實測**——這個環境只有 Chromium，不要在文件上宣稱沒驗證過的支援度。
+
 ## 踩過的坑（別再踩一次）
 
 **1. 本地全綠 ≠ CI 全綠。** 第一次推上去 CI 三個 job 全紅，其中兩個在本地看不到：
@@ -149,12 +156,17 @@ pnpm test:e2e     # Playwright 10 個，跑在正式建置版本上
 
 **4. 圓形不要用通用弧線轉換。** 通用轉換以 120° 分割，半徑誤差約 0.15%；改用精確的四分之一圓建構（常數 `4/3 × (√2 − 1)`）可降到 0.005% 以下。圖示裡圓形和橢圓最常見，值得特例處理。
 
-**5. Lottie 圖層的 anchor 與 position 不能都設成形狀中心。**（2026-09-01 修正）
+**5. `pnpm lint` 不包含格式檢查。**
+症狀：程式碼過了 `pnpm lint`，但 CI 的 `format:check` 會紅。
+原因：`lint` 只跑 eslint，格式是另一個 script（`pnpm format:check`，跑 prettier）。CI 兩個都跑。
+修法：推之前跑 `pnpm format:check`，或直接 `pnpm format`。（這次是因為 CI 只在 main 與 PR 上跑，分支還沒開 PR，才沒真的變紅。）
+
+**6. Lottie 圖層的 anchor 與 position 不能都設成形狀中心。**（2026-09-01 修正）
 症狀：所有 Lottie 匯出的圖形都畫在畫布左上角，只露出四分之一。
 原因：幾何已經平移到以形狀中心為原點，圖層卻同時把 `a`（anchor）和 `p`（position）都設成中心；播放器算的是 `translate(p) · rotate · scale · translate(-a)`，兩者相同就互相抵銷成單位矩陣。
 修法：`a` 設為 `[0, 0]`，只用 `p` 把形狀放回畫布位置。快照測試與結構斷言全都抓不到這個錯——**是把 JSON 丟進真正的播放器截圖比對才發現的**。已加上會失敗的回歸測試（`lottie-playback.test.ts` 會把播放器算出的座標還原出來，檢查是否落在畫布內）。
 
-**6. 同一個問題不要警告兩次。** 曾經 preset 驗證器和 Lottie 匯出器各報一次「這個形狀沒有 stroke」，措辭不同，看起來像兩個問題。已移除重複。
+**7. 同一個問題不要警告兩次。** 曾經 preset 驗證器和 Lottie 匯出器各報一次「這個形狀沒有 stroke」，措辭不同，看起來像兩個問題。已移除重複。
 
 ---
 

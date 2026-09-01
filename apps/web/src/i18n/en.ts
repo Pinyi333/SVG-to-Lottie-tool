@@ -12,9 +12,9 @@ export const en = {
   },
 
   dropLottie: {
-    title: 'Drop a Lottie JSON file here',
-    hint: 'or click to choose a .json file.',
-    reject: 'That file is not valid Lottie JSON.',
+    title: 'Drop a Lottie file here',
+    hint: 'or click to choose a .json or .lottie file.',
+    reject: 'That file is not valid Lottie JSON or a .lottie archive.',
   },
 
   shapes: {

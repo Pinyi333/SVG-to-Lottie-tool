@@ -1,3 +1,5 @@
+import { unzipSync } from 'fflate';
+
 /**
  * Minimal structural validation for a file claiming to be Lottie.
  *
@@ -19,6 +21,62 @@ export interface LottieFileSummary {
 export interface ParsedLottieFile {
   data: Record<string, unknown>;
   summary: LottieFileSummary;
+}
+
+/** What a `.lottie` archive carries beyond the animation itself. */
+export interface DotLottieContents {
+  /** The animation JSON, ready for `parseLottieFile`. */
+  text: string;
+  /** The manifest's loop setting, which a bare `.json` cannot express. */
+  loop: boolean | null;
+}
+
+/**
+ * Reads the animation out of a `.lottie` archive.
+ *
+ * A dotLottie file is a ZIP whose manifest names the animations and whose JSON
+ * lives under `animations/`. The manifest decides which entry to play; a file
+ * whose manifest is missing or disagrees is still worth playing when it holds
+ * exactly one animation, so that is the fallback.
+ */
+export function readDotLottie(bytes: Uint8Array): DotLottieContents | null {
+  let entries: Record<string, Uint8Array>;
+  try {
+    entries = unzipSync(bytes);
+  } catch {
+    return null;
+  }
+
+  const decoder = new TextDecoder();
+  const animations = Object.keys(entries).filter(
+    (name) => name.startsWith('animations/') && name.endsWith('.json'),
+  );
+  if (animations.length === 0) return null;
+
+  let chosen = animations.length === 1 ? animations[0]! : null;
+  let loop: boolean | null = null;
+
+  const manifestBytes = entries['manifest.json'];
+  if (manifestBytes) {
+    try {
+      const manifest = JSON.parse(decoder.decode(manifestBytes)) as {
+        animations?: { id?: unknown; loop?: unknown }[];
+      };
+      const first = manifest.animations?.[0];
+      if (typeof first?.loop === 'boolean') loop = first.loop;
+      if (typeof first?.id === 'string') {
+        const named = `animations/${first.id}.json`;
+        if (entries[named]) chosen = named;
+      }
+    } catch {
+      // A malformed manifest is not a reason to refuse a playable animation.
+    }
+  }
+
+  // With several animations and nothing naming one, the first is as good a
+  // guess as any — the alternative is refusing a file that plays fine.
+  chosen ??= animations.sort()[0]!;
+  return { text: decoder.decode(entries[chosen]!), loop };
 }
 
 export function parseLottieFile(text: string): ParsedLottieFile | null {

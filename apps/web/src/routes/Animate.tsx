@@ -150,7 +150,7 @@ export function Animate({ onSendToPlayground }: { onSendToPlayground: (data: unk
           title={t.drop.title}
           hint={t.drop.hint}
           rejectMessage={t.drop.reject}
-          onFile={loadSvg}
+          onFile={async (file) => loadSvg(await file.text(), file.name)}
         />
         <div className="flex flex-wrap items-center justify-center gap-2">
           <span className="text-xs text-slate-500">{t.drop.sample}</span>

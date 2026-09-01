@@ -4,7 +4,7 @@ import { LottiePlayer } from '../components/LottiePlayer.js';
 import { CodeBlock } from '../components/CodeBlock.js';
 import { Button, Field, Panel, Select, Slider, Tabs, Toggle } from '../components/ui.js';
 import { useI18n } from '../i18n/index.js';
-import { parseLottieFile, type LottieFileSummary } from '../lib/lottie-file.js';
+import { parseLottieFile, readDotLottie, type LottieFileSummary } from '../lib/lottie-file.js';
 import {
   ANIMATION_URL_PLACEHOLDER,
   htmlEmbed,
@@ -54,10 +54,22 @@ export function Playground({
     onConsumeIncoming();
   }, [incoming, onConsumeIncoming]);
 
-  const loadFile = useCallback((text: string) => {
-    const parsed = parseLottieFile(text);
+  const loadFile = useCallback(async (file: File) => {
+    // A `.lottie` is a ZIP, so it has to be read as bytes; a `.json` is text.
+    const archive = file.name.toLowerCase().endsWith('.lottie')
+      ? readDotLottie(new Uint8Array(await file.arrayBuffer()))
+      : null;
+    if (file.name.toLowerCase().endsWith('.lottie') && !archive) {
+      throw new Error('not a dotLottie archive');
+    }
+
+    const parsed = parseLottieFile(archive ? archive.text : await file.text());
     if (!parsed) throw new Error('not lottie');
+
     setLoaded({ data: parsed.data, summary: parsed.summary });
+    // The manifest's loop setting is the reason the archive format exists, so
+    // honour it rather than making the visitor set it again.
+    if (archive?.loop !== null && archive?.loop !== undefined) setLoop(archive.loop);
     setPlaying(true);
   }, []);
 

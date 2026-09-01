@@ -38,7 +38,9 @@ All notable changes to this project are documented here. The format follows
   `.lottie` archive. The manifest carries the loop setting, which a bare
   `.json` has nowhere to record. Entries are deflated and stamped with a fixed
   timestamp, so the same animation always produces the same bytes. The Animate
-  workspace gained a "Download .lottie" button beside the Lottie export.
+  workspace gained a "Download .lottie" button beside the Lottie export, and
+  the Lottie Playground now opens a dropped `.lottie` archive — honouring the
+  loop setting its manifest records — as well as a bare `.json`.
 
 ### Changed
 

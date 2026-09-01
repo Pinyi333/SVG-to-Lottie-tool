@@ -14,9 +14,9 @@ export const zhTW: Dictionary = {
   },
 
   dropLottie: {
-    title: '把 Lottie JSON 拖曳到這裡',
-    hint: '或點擊選擇 .json 檔案。',
-    reject: '這不是有效的 Lottie JSON。',
+    title: '把 Lottie 檔案拖曳到這裡',
+    hint: '或點擊選擇 .json 或 .lottie 檔案。',
+    reject: '這不是有效的 Lottie JSON，也不是 .lottie 封存檔。',
   },
 
   shapes: {

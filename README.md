@@ -17,7 +17,8 @@ Upload SVG  →  pick an effect  →  preview  →  export
                                               └── Vue component
 ```
 
-The app has a second workspace, a **Lottie Playground**: drop in any `.json`,
+The app has a second workspace, a **Lottie Playground**: drop in any `.json` or
+`.lottie`,
 adjust speed, direction, loop, size and background, and copy an embed snippet
 for plain HTML, an iframe, React or Vue. Animations you build in the first
 workspace can be handed straight to it.

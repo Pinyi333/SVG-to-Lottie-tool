@@ -16,7 +16,9 @@ export function Dropzone({
   title: string;
   hint: string;
   rejectMessage: string;
-  onFile: (text: string, filename: string) => void;
+  /** Receives the accepted file. Reading it is the caller's business: an SVG
+   * is text, a `.lottie` archive is bytes. Throwing rejects the file. */
+  onFile: (file: File) => void | Promise<void>;
   children?: React.ReactNode;
 }) {
   const { t, format } = useI18n();
@@ -49,7 +51,7 @@ export function Dropzone({
       }
 
       try {
-        onFile(await file.text(), file.name);
+        await onFile(file);
       } catch {
         setError(rejectMessage);
       }

@@ -121,6 +121,30 @@ test('hands an animation to the playground and plays it', async ({ page }) => {
   await expect(page.locator('#root svg').first()).toBeVisible();
 });
 
+test('takes back a .lottie it exported and plays it', async ({ page }) => {
+  await uploadSvg(page);
+  await page.getByRole('tab', { name: 'Lottie JSON' }).click();
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Download .lottie' }).click(),
+  ]);
+  const archive = await readFile(await download.path());
+
+  // The round trip is the real test of the format work: what one workspace
+  // writes, the other has to be able to open.
+  await page.getByRole('tab', { name: 'Lottie Playground' }).click();
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'check.lottie',
+    mimeType: 'application/zip',
+    buffer: archive,
+  });
+
+  await expect(page.getByRole('heading', { name: 'Player' })).toBeVisible();
+  await expect(page.locator('#root svg').first()).toBeVisible();
+  await expect(page.getByText('Frame rate')).toBeVisible();
+});
+
 test('generates an embed snippet in the playground', async ({ page }) => {
   await uploadSvg(page);
   await page.getByRole('tab', { name: 'Lottie JSON' }).click();
