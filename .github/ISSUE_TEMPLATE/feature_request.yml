@@ -1,0 +1,37 @@
+name: Feature request
+description: Suggest an effect, an export target, or an improvement.
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: >
+        Describe the situation rather than the solution. Knowing what you are
+        making often points at a better answer than the one you had in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you have in mind
+      description: Optional — if you already have a shape for it, describe it here.
+
+  - type: checkboxes
+    id: targets
+    attributes:
+      label: Which outputs would need to support it
+      options:
+        - label: Lottie JSON
+        - label: CSS
+        - label: Standalone SVG
+        - label: React
+        - label: Vue
+
+  - type: markdown
+    attributes:
+      value: |
+        Worth knowing: Lottie has no model for input events, so hover- and
+        scroll-driven effects can never be exported to it. They can still be
+        added for the CSS, SVG, React and Vue targets.

@@ -1,0 +1,65 @@
+name: Bug report
+description: Something produced the wrong output, or did not work at all.
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. The most useful thing you can include is the SVG
+        that triggered it — most bugs here live in the geometry of one file.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, and what you got instead of what you expected.
+    validations:
+      required: true
+
+  - type: textarea
+    id: svg
+    attributes:
+      label: The SVG involved
+      description: >
+        Paste the source, or attach the file. If you cannot share it, a reduced
+        version that still shows the problem is just as good.
+      render: xml
+
+  - type: dropdown
+    id: format
+    attributes:
+      label: Which export is affected
+      multiple: true
+      options:
+        - Lottie JSON
+        - CSS
+        - Standalone SVG
+        - React
+        - Vue
+        - The preview in the app
+        - The Lottie Playground
+
+  - type: dropdown
+    id: effect
+    attributes:
+      label: Which effect
+      options:
+        - Stroke draw
+        - Fade
+        - Scale
+        - Rotate
+        - Bounce
+        - Not specific to one effect
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The `svgmotion` version, or "hosted demo" if you used the website.
+      placeholder: '0.1.0'
+
+  - type: input
+    id: environment
+    attributes:
+      label: Browser or runtime
+      placeholder: 'Firefox 141 on Linux, or Node 22'

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/Pinyi333/SVG-to-Lottie-tool/security/advisories/new
+    about: Please report security issues privately rather than as a public issue.
+  - name: Question or idea
+    url: https://github.com/Pinyi333/SVG-to-Lottie-tool/discussions
+    about: For anything that is not a bug report or a concrete feature request.

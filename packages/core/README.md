@@ -38,7 +38,10 @@ const parsed = parseSvg(svgMarkup);
 
 const spec = createSpec(parsed, { fps: 60 });
 spec.tracks = [
-  createTrack('tick', 'strokeDraw', { duration: 1.2, easing: { x1: 0.42, y1: 0, x2: 0.58, y2: 1 } }),
+  createTrack('tick', 'strokeDraw', {
+    duration: 1.2,
+    easing: { x1: 0.42, y1: 0, x2: 0.58, y2: 1 },
+  }),
 ];
 
 const { animation, warnings, loop } = toLottie(spec);
@@ -63,17 +66,17 @@ itself rather than in this tool. Lottie has no concept of input events, so
 hover and scroll animations can never be Lottie — they are CSS and JavaScript
 only. Saying so plainly beats exporting a file that silently does nothing.
 
-| Effect          | CSS | SVG | Lottie          | React | Vue |
-| --------------- | --- | --- | --------------- | ----- | --- |
-| Stroke draw     | ✅ dash offset | ✅ | ✅ Trim Paths | ✅ | ✅ |
-| Fade            | ✅  | ✅  | ✅              | ✅    | ✅  |
-| Scale           | ✅  | ✅  | ✅              | ✅    | ✅  |
-| Rotate          | ✅  | ✅  | ✅              | ✅    | ✅  |
-| Bounce          | ✅  | ✅  | ✅              | ✅    | ✅  |
-| Loop / ping-pong | ✅ | ✅  | ✅              | ✅    | ✅  |
-| Path morph      | [#1](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues) | planned | planned | planned | planned |
-| Hover           | planned | ✅ `:hover` | ❌ not expressible | planned | planned |
-| Scroll          | planned | ❌ | ❌ not expressible | planned | planned |
+| Effect           | CSS                                                         | SVG         | Lottie             | React   | Vue     |
+| ---------------- | ----------------------------------------------------------- | ----------- | ------------------ | ------- | ------- |
+| Stroke draw      | ✅ dash offset                                              | ✅          | ✅ Trim Paths      | ✅      | ✅      |
+| Fade             | ✅                                                          | ✅          | ✅                 | ✅      | ✅      |
+| Scale            | ✅                                                          | ✅          | ✅                 | ✅      | ✅      |
+| Rotate           | ✅                                                          | ✅          | ✅                 | ✅      | ✅      |
+| Bounce           | ✅                                                          | ✅          | ✅                 | ✅      | ✅      |
+| Loop / ping-pong | ✅                                                          | ✅          | ✅                 | ✅      | ✅      |
+| Path morph       | [#1](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues) | planned     | planned            | planned | planned |
+| Hover            | planned                                                     | ✅ `:hover` | ❌ not expressible | planned | planned |
+| Scroll           | planned                                                     | ❌          | ❌ not expressible | planned | planned |
 
 ## What of an SVG survives the trip
 
