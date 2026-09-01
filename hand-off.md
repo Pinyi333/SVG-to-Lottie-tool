@@ -48,7 +48,7 @@
   - Lottie：hover tracks 在 resolve 前被剔除並發 `lottie-unsupported` 警告（不影響時間軸與 loop 判定）
   - Web UI：Animate 面板新增「播放時機」選單（載入時／滑鼠懸停時），中英 i18n
   - 測試：新增 `packages/core/test/hover.test.ts` 6 個測試
-- 🔄 **Scroll 觸發實作完成，驗證中／待 commit**（2026-09-01）：
+- ✅ `f314555` **Scroll 觸發已 commit**（2026-09-01，全套 150/150 測試通過）：
   - core：`TrackTrigger` 擴充為 `'auto' | 'hover' | 'scroll'`
   - CSS：scroll tracks 用 `animation-timeline: view()` 隨捲動推進；混用時逐項配對 timeline（`auto, view()`）；不支援的瀏覽器自動退回直接播放
   - Lottie：hover/scroll 一併剔除＋警告；獨立 SVG 匯出對 scroll 發 `trigger-unsupported` 警告（`<img>` 內無捲動上下文）
@@ -56,12 +56,7 @@
 
 ## 效果 × 匯出格式支援現況
 
-Stroke draw / Fade / Scale / Rotate / Bounce / Loop / **Path morph** 在五種格式皆已支援。缺口：
-
-| 效果 | 缺的部分 |
-| --- | --- |
-| Hover | CSS、React、Vue planned（SVG 已有 `:hover`；Lottie 格式本身無法表達） |
-| Scroll | CSS、React、Vue planned（SVG / Lottie 無法表達） |
+**README 支援表已全部落地**：七種效果（Stroke draw / Fade / Scale / Rotate / Bounce / Loop / Path morph）五種格式全支援；Hover 與 Scroll 以 `trigger` 落地於 CSS/React/Vue（Lottie 本質上無法表達，匯出時明確警告）。
 
 ## 待辦事項（Next steps）
 
