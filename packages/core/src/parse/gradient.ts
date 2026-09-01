@@ -70,8 +70,7 @@ export function referencedFallback(paint: string | null | undefined): string | n
 export type GradientFailure = 'not-found' | 'not-a-gradient' | 'no-stops' | 'degenerate-box';
 
 export type GradientResolution =
-  | { ok: true; gradient: Gradient }
-  | { ok: false; reason: GradientFailure };
+  { ok: true; gradient: Gradient } | { ok: false; reason: GradientFailure };
 
 export interface ResolveGradientOptions {
   /** Accumulated transform of the referencing element; already baked into its geometry. */
@@ -116,7 +115,8 @@ export function resolveGradient(
   const stops = resolveStops(chain);
   if (stops.length === 0) return { ok: false, reason: 'no-stops' };
 
-  const objectBoundingBox = (attribute('gradientUnits') ?? 'objectBoundingBox') !== 'userSpaceOnUse';
+  const objectBoundingBox =
+    (attribute('gradientUnits') ?? 'objectBoundingBox') !== 'userSpaceOnUse';
   // A bounding box with no area gives objectBoundingBox units nothing to
   // resolve against — a straight line filled this way is not rendered at all,
   // rather than rendered in some arbitrary colour.
@@ -155,7 +155,10 @@ export function resolveGradient(
     x: lengthX(attribute('fx'), center.x),
     y: lengthY(attribute('fy'), center.y),
   };
-  return { ok: true, gradient: { type: 'radial', center, radius, focus, stops, spread, transform } };
+  return {
+    ok: true,
+    gradient: { type: 'radial', center, radius, focus, stops, spread, transform },
+  };
 }
 
 /**

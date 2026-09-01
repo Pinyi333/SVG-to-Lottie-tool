@@ -244,7 +244,13 @@ export function toCss(spec: AnimationSpec, options: CssOptions = {}): CssOutput 
 
       const steps = keyframePositions(channels)
         .map((t) => {
-          const body = declarationsAt(channels, node, t, morphs.get(resolvedTrack) ?? null, precision);
+          const body = declarationsAt(
+            channels,
+            node,
+            t,
+            morphs.get(resolvedTrack) ?? null,
+            precision,
+          );
           if (body.length === 0) return null;
           const timing = easingAt(channels, t, fallbackEasing);
           // Declaring the timing function inside each stop is what lets a
@@ -304,7 +310,9 @@ export function toCss(spec: AnimationSpec, options: CssOptions = {}): CssOutput 
     if (base.length > 0) {
       body.push(`animation: ${base.join(', ')};`);
       if (scrollAnimations.length > 0) {
-        body.push(`animation-timeline: ${timelineList(animations.length, scrollAnimations.length)};`);
+        body.push(
+          `animation-timeline: ${timelineList(animations.length, scrollAnimations.length)};`,
+        );
       }
     }
     if (body.length > 0) rules.push(`.${className} {\n  ${body.join('\n  ')}\n}`);

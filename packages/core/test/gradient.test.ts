@@ -71,7 +71,9 @@ describe('parseSvg with gradients', () => {
 
     expect(messages).toHaveLength(2);
     expect(messages.join('\n')).toContain('"#checks", which is a pattern rather than a gradient');
-    expect(messages.join('\n')).toContain('"#nope", which points at an id that is not in this file');
+    expect(messages.join('\n')).toContain(
+      '"#nope", which points at an id that is not in this file',
+    );
   });
 
   it('leaves a shape with an unresolvable reference and no fallback unpainted', () => {
@@ -192,7 +194,7 @@ describe('toLottie with gradients', () => {
     expect(fill.e).toEqual({ a: 0, k: [10, 0] });
     expect(fill.g).toEqual({
       p: 2,
-      k: { a: 0, k: [0, 0.9922, 0.8784, 0.2784, 1, 0.9765, 0.4510, 0.0863] },
+      k: { a: 0, k: [0, 0.9922, 0.8784, 0.2784, 1, 0.9765, 0.451, 0.0863] },
     });
   });
 
