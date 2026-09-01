@@ -1,12 +1,15 @@
 import { parseColor, toLottieColor } from '../../parse/color.js';
 import { toLottieHandles } from '../../easing.js';
-import type { Easing, Paint, Point, SvgNode } from '../../types.js';
+import type { Easing, Gradient, Paint, Point, SvgNode } from '../../types.js';
+import { flattenGradient } from '../gradient.js';
 import { subpathToBezier, translateBezier, type LottieBezier } from './path.js';
 import { staticProperty, type LottieProperty } from './keyframe.js';
 
 /** Lottie's numeric codes for the line-cap and line-join enums. */
 const LINECAP: Record<Paint['strokeLinecap'], number> = { butt: 1, round: 2, square: 3 };
 const LINEJOIN: Record<Paint['strokeLinejoin'], number> = { miter: 1, round: 2, bevel: 3 };
+
+const round = (n: number): number => Number(n.toFixed(4));
 
 export interface LottieShapeItem {
   ty: string;
@@ -37,7 +40,6 @@ export function animatedPathItem(
   fps: number,
   index: number,
 ): LottieShapeItem {
-  const round = (n: number): number => Number(n.toFixed(4));
   const k = keyframes.map((keyframe, i) => {
     const frame: Record<string, unknown> = {
       t: round(keyframe.time * fps),
@@ -80,6 +82,79 @@ export function strokeItem(paint: Paint): LottieShapeItem | null {
     lc: LINECAP[paint.strokeLinecap],
     lj: LINEJOIN[paint.strokeLinejoin],
     nm: 'Stroke',
+  };
+}
+
+/**
+ * Flattens gradient stops into Lottie's colour ramp.
+ *
+ * The ramp is one flat array: `[offset, r, g, b]` per colour stop, optionally
+ * followed by `[offset, alpha]` per opacity stop. The two sections are
+ * separate in the format — a colour stop cannot carry its own alpha — so a
+ * gradient that fades has to repeat its offsets in both.
+ */
+function colorRamp(gradient: Gradient): { count: number; values: number[] } {
+  const colors: number[] = [];
+  for (const stop of gradient.stops) {
+    const rgb = toLottieColor(parseColor(stop.color) ?? { r: 0, g: 0, b: 0, a: 1 });
+    colors.push(round(stop.offset), ...rgb.map(round));
+  }
+
+  // Players treat a missing alpha section as fully opaque, so it is only
+  // written when a stop actually asks for transparency.
+  const transparent = gradient.stops.some((stop) => stop.opacity !== 1);
+  if (!transparent) return { count: gradient.stops.length, values: colors };
+
+  const alphas: number[] = [];
+  for (const stop of gradient.stops) alphas.push(round(stop.offset), round(stop.opacity));
+  return { count: gradient.stops.length, values: [...colors, ...alphas] };
+}
+
+/** The `s`, `e`, `t`, `h`, `a` and `g` fields shared by `gf` and `gs` items. */
+function gradientProperties(gradient: Gradient, origin: Point): Record<string, unknown> {
+  const flat = flattenGradient(gradient, origin);
+  const ramp = colorRamp(gradient);
+
+  // Lottie states a radial gradient's focal point as a polar offset from the
+  // centre — a percentage of the radius, plus an angle — rather than a point.
+  const radius = Math.hypot(flat.end.x - flat.start.x, flat.end.y - flat.start.y);
+  const offsetX = flat.focus.x - flat.start.x;
+  const offsetY = flat.focus.y - flat.start.y;
+  const highlight = radius === 0 ? 0 : Math.min(100, (Math.hypot(offsetX, offsetY) / radius) * 100);
+
+  return {
+    s: staticProperty([round(flat.start.x), round(flat.start.y)]),
+    e: staticProperty([round(flat.end.x), round(flat.end.y)]),
+    t: gradient.type === 'linear' ? 1 : 2,
+    h: staticProperty(round(highlight)),
+    a: staticProperty(round((Math.atan2(offsetY, offsetX) * 180) / Math.PI)),
+    g: { p: ramp.count, k: staticProperty(ramp.values) },
+  };
+}
+
+/** A `gf` item: a gradient fill. Returns null when the shape has no gradient fill. */
+export function gradientFillItem(paint: Paint, origin: Point): LottieShapeItem | null {
+  if (!paint.fillGradient) return null;
+  return {
+    ty: 'gf',
+    ...gradientProperties(paint.fillGradient, origin),
+    o: staticProperty(paint.fillOpacity * 100),
+    r: 1,
+    nm: 'Gradient Fill',
+  };
+}
+
+/** A `gs` item: a gradient stroke. Returns null when the shape has no gradient stroke. */
+export function gradientStrokeItem(paint: Paint, origin: Point): LottieShapeItem | null {
+  if (!paint.strokeGradient) return null;
+  return {
+    ty: 'gs',
+    ...gradientProperties(paint.strokeGradient, origin),
+    o: staticProperty(paint.strokeOpacity * 100),
+    w: staticProperty(paint.strokeWidth),
+    lc: LINECAP[paint.strokeLinecap],
+    lj: LINEJOIN[paint.strokeLinejoin],
+    nm: 'Gradient Stroke',
   };
 }
 

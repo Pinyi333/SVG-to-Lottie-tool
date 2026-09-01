@@ -2,6 +2,16 @@ export * from './types.js';
 export { parseSvg, type ParseOptions } from './parse/index.js';
 export { subpathsToPathData } from './parse/geometry.js';
 export {
+  collectGradients,
+  referencedFallback,
+  referencedId,
+  resolveGradient,
+  type GradientFailure,
+  type GradientRegistry,
+  type GradientResolution,
+  type ResolveGradientOptions,
+} from './parse/gradient.js';
+export {
   alignForMorph,
   interpolateSubpaths,
   parseMorphTarget,
@@ -46,6 +56,14 @@ export {
   type AbsoluteKeyframe,
 } from './timeline.js';
 export { toCss, type CssOptions, type CssOutput } from './render/css.js';
+export {
+  GradientDefs,
+  applyTransform,
+  flattenGradient,
+  isSimilarity,
+  transformScale,
+  type FlatGradient,
+} from './render/gradient.js';
 export { toSvg, type SvgOptions } from './render/svg.js';
 export {
   toLottie,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseSvg } from '../src/parse/index.js';
-import { createSpec, createTrack } from '../src/spec.js';
+import { animateAll, createSpec, createTrack } from '../src/spec.js';
 import { toLottie } from '../src/render/lottie.js';
 import { toCss } from '../src/render/css.js';
 import { toSvg } from '../src/render/svg.js';
@@ -39,5 +39,25 @@ describe.each(PRESET_NAMES)('%s output stays stable', (preset) => {
 
   it('renders the same standalone SVG', () => {
     expect(toSvg(spec).html).toMatchSnapshot();
+  });
+});
+
+/**
+ * Gradients get their own golden files because they are the one part of the
+ * output that four exporters build from the same resolved data — a change to
+ * how a gradient is resolved shows up in all of them at once, which is easier
+ * to read as a diff than as four failing assertions.
+ */
+describe('gradient output stays stable', () => {
+  const spec = animateAll(createSpec(parseSvg(fixture('gradients.svg')), { fps: 30 }), 'fade', {
+    duration: 1,
+  });
+
+  it('renders the same Lottie JSON', () => {
+    expect(toLottie(spec, { name: 'gradients' }).animation).toMatchSnapshot();
+  });
+
+  it('renders the same defs and markup', () => {
+    expect(toCss(spec).html).toMatchSnapshot();
   });
 });

@@ -1,4 +1,13 @@
-import type { ParsedSvg, Rect, SvgNode, Warning } from '../types.js';
+import type { Paint, ParsedSvg, Rect, SvgNode, Warning } from '../types.js';
+import { parseColor, toHex } from './color.js';
+import {
+  collectGradients,
+  referencedFallback,
+  referencedId,
+  resolveGradient,
+  type GradientFailure,
+  type GradientRegistry,
+} from './gradient.js';
 import { boundingBox, elementToPathData, outlineLength, toSubpaths } from './geometry.js';
 import { IDENTITY, multiply, parseTransform, scaleFactor, type Matrix } from './matrix.js';
 import { sanitizeElement } from './sanitize.js';
@@ -20,8 +29,9 @@ const SHAPE_TAGS = new Set(['path', 'rect', 'circle', 'ellipse', 'line', 'polygo
 const CONTAINER_TAGS = new Set(['g', 'svg', 'a', 'switch']);
 
 /**
- * Elements that are silently ignored: they carry no geometry we would draw,
- * and warning about each one would bury the warnings that matter.
+ * Elements the shape walk steps over. They carry no geometry we would draw,
+ * and warning about each one would bury the warnings that matter. Gradients
+ * are among them because they are read separately, by `collectGradients`.
  */
 const IGNORED_TAGS = new Set([
   'title',
@@ -64,6 +74,65 @@ class IdAllocator {
     const unique = `${base}-${suffix}`;
     this.taken.add(unique);
     return unique;
+  }
+}
+
+interface PaintServerContext {
+  gradients: GradientRegistry;
+  ctm: Matrix;
+  /** The shape's bounding box in its own space, before `ctm` is applied. */
+  bbox: Rect;
+  viewBox: Rect;
+  subject: string;
+  warn: (key: string, subject: string, message: string) => void;
+}
+
+/** Why a `url(#id)` paint could not be resolved, in words a user can act on. */
+const PAINT_FAILURES: Record<GradientFailure, string> = {
+  'not-found': 'points at an id that is not in this file',
+  'not-a-gradient': 'is a pattern rather than a gradient, and patterns are not converted',
+  'no-stops': 'is a gradient with no stops, which paints nothing',
+  'degenerate-box': 'is sized against a bounding box with no width or height',
+};
+
+/**
+ * Resolves the `url(#id)` fill and stroke of one shape, mutating its paint.
+ *
+ * A reference that cannot be resolved falls back to the colour the paint named
+ * after it, as SVG intends, and only then to nothing — a shape is far more
+ * useful drawn in its fallback colour than dropped for a missing gradient.
+ */
+function applyPaintServers(paint: Paint, style: StyleState, context: PaintServerContext): void {
+  const properties = [
+    { property: 'fill', raw: style.fill, gradient: 'fillGradient' },
+    { property: 'stroke', raw: style.stroke, gradient: 'strokeGradient' },
+  ] as const;
+
+  for (const { property, raw, gradient } of properties) {
+    const id = referencedId(raw);
+    if (!id) continue;
+
+    const resolution = resolveGradient(id, context.gradients, {
+      ctm: context.ctm,
+      bbox: context.bbox,
+      viewBox: context.viewBox,
+    });
+
+    if (resolution.ok) {
+      paint[gradient] = resolution.gradient;
+      continue;
+    }
+
+    const fallback = parseColor(referencedFallback(raw));
+    paint[property] = fallback ? toHex(fallback) : null;
+    context.warn(
+      `paint:${id}`,
+      context.subject,
+      `The ${property} references "#${id}", which ${PAINT_FAILURES[resolution.reason]}. ` +
+        (fallback
+          ? `The fallback colour ${paint[property]} was used instead.`
+          : 'The shape will be invisible.'),
+    );
   }
 }
 
@@ -138,6 +207,7 @@ export function parseSvg(svgText: string, options: ParseOptions = {}): ParsedSvg
   sanitizeElement(root, warnings);
 
   const viewBox = parseViewBox(root, warnings);
+  const gradients = collectGradients(root);
   const nodes: SvgNode[] = [];
   const ids = new IdAllocator();
   const reported = new Set<string>();
@@ -146,6 +216,14 @@ export function parseSvg(svgText: string, options: ParseOptions = {}): ParsedSvg
     if (reported.has(tag)) return;
     reported.add(tag);
     warnings.push({ code: 'unsupported-element', subject: tag, message: UNSUPPORTED_TAGS[tag]! });
+  };
+
+  // One document can reference the same broken paint from a hundred shapes.
+  // Reporting it once per reference keeps the list readable.
+  const warnPaint = (key: string, subject: string, message: string) => {
+    if (reported.has(key)) return;
+    reported.add(key);
+    warnings.push({ code: 'unsupported-paint', subject, message });
   };
 
   const walk = (el: Element, parentMatrix: Matrix, parentStyle: StyleState) => {
@@ -178,15 +256,18 @@ export function parseSvg(svgText: string, options: ParseOptions = {}): ParsedSvg
     if (subpaths.length === 0) return;
 
     const paint = toPaint(style, scaleFactor(matrix) || 1);
-    if (paint.fill === null && paint.stroke === null) {
-      const rawFill = el.getAttribute('fill') ?? style.fill;
-      if (rawFill.trim().startsWith('url(')) {
-        warnings.push({
-          code: 'unsupported-paint',
-          subject: tag,
-          message: 'Gradient and pattern fills are not supported; the shape will be invisible.',
-        });
-      }
+    // Gradient references come out of `toPaint` as no colour at all. Resolving
+    // them needs the shape's own bounding box, which only exists here — and in
+    // the element's own space, before the transform chain has been applied.
+    if (referencedId(style.fill) || referencedId(style.stroke)) {
+      applyPaintServers(paint, style, {
+        gradients,
+        ctm: matrix,
+        bbox: boundingBox(toSubpaths(pathData, IDENTITY)),
+        viewBox,
+        subject: tag,
+        warn: warnPaint,
+      });
     }
 
     nodes.push({

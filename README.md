@@ -77,17 +77,26 @@ only. Saying so plainly beats exporting a file that silently does nothing.
 | Path morph       | ✅ `d: path()`                                              | ✅          | ✅ shape keyframes | ✅      | ✅      |
 | Hover            | ✅ `:hover` rule                                            | ✅          | ❌ not expressible | ✅      | ✅      |
 | Scroll           | ✅ `view()` timeline                                        | ❌          | ❌ not expressible | ✅      | ✅      |
+| Gradient paint   | ✅ `<defs>`                                                 | ✅          | ⚠️ `gf` / `gs`, approximated when stretched | ✅ | ✅ |
 
 ## What of an SVG survives the trip
 
 Supported: `path`, `rect`, `circle`, `ellipse`, `line`, `polygon`, `polyline`,
 nested `g` elements, `transform` on any of them, solid fills and strokes,
-`stroke-width`, `stroke-linecap`, `stroke-linejoin`, opacity, presentation
-attributes and inline `style`.
+linear and radial gradients, `stroke-width`, `stroke-linecap`,
+`stroke-linejoin`, opacity, presentation attributes and inline `style`.
 
 Not converted, and reported as a warning rather than dropped in silence:
-gradients and patterns, `clipPath` and masks, filters, `text`, `image`, `use`
-references, and `<style>` blocks. Flatten those before uploading.
+patterns, `clipPath` and masks, filters, `text`, `image`, `use` references, and
+`<style>` blocks. Flatten those before uploading.
+
+Gradients are carried in full — stops, `stop-opacity`, both unit systems,
+`gradientTransform`, and `href` inheritance — by the CSS, SVG, React and Vue
+exports. Lottie has gradients of its own but describes them with two points, so
+a gradient stretched by a non-square bounding box or skewed by a transform is
+approximated there, and `spreadMethod` other than `pad` is not carried; both
+are reported. A `url(#id)` that cannot be resolved falls back to the colour
+named after it, as SVG intends.
 
 Circles and ellipses are built from exact quarter-arc beziers rather than the
 generic 120° arc conversion, which keeps radial error under 0.005% of the

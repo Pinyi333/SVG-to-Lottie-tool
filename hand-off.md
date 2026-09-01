@@ -9,7 +9,7 @@
 
 ## 一句話狀態
 
-核心引擎與網頁工具都已完成並通過測試，**CI 全綠**，v0.2 roadmap 的五項功能已完成三項（path morph、hover、scroll）；卡在 GitHub Pages 尚未啟用，demo 網址還沒生出來，因此還不能送 Codex for OSS 申請。
+核心引擎與網頁工具都已完成並通過測試，**CI 全綠**，v0.2 roadmap 的五項功能已完成四項（path morph、hover、scroll、漸層）；卡在 GitHub Pages 尚未啟用，demo 網址還沒生出來，因此還不能送 Codex for OSS 申請。
 
 ---
 
@@ -27,9 +27,9 @@
 
 | 項目                                                        | 狀態                                                     |
 | ----------------------------------------------------------- | -------------------------------------------------------- |
-| 核心套件 `svgmotion`                                        | ✅ 完成，150 個測試通過                                  |
+| 核心套件 `svgmotion`                                        | ✅ 完成，169 個測試通過                                  |
 | 網頁 App（Animate + Playground）                            | ✅ 完成，12 個單元測試 + 9 個 e2e 測試通過               |
-| v0.2 功能：path morph／hover／scroll                        | ✅ 完成（剩 Lottie 漸層、dotLottie 輸出未做）            |
+| v0.2 功能：path morph／hover／scroll／漸層                  | ✅ 完成（剩 dotLottie 輸出未做）                         |
 | 文件（README 中英、CONTRIBUTING、SECURITY、CoC、CHANGELOG） | ✅ 完成                                                  |
 | CI（lint / format / typecheck / test / build / e2e）        | ✅ **全綠**                                              |
 | GitHub Pages demo                                           | ⛔ **卡住** — Pages 未啟用                               |
@@ -67,7 +67,7 @@ release workflow 會先跑完整測試、確認 tag 與套件版本一致才發�
 
 ### ④ 開 v0.2 roadmap issues
 
-貼 `good first issue` / `help wanted` 標籤。原本列的五項裡，路徑變形（path morph）、hover 動畫、scroll 動畫都**已經做完了**，剩下 **Lottie 漸層支援**與 **dotLottie 輸出**。
+貼 `good first issue` / `help wanted` 標籤。原本列的五項裡，路徑變形（path morph）、hover 動畫、scroll 動畫、Lottie 漸層支援都**已經做完了**，剩下 **dotLottie 輸出**；可以再想幾項新的（例如 morph 的瀏覽器相容性實測、Playground 的 morph 範例、Lottie 匯出的 `spreadMethod` 近似改善）。
 **這是加分項**——公開 roadmap 是「活躍維護」的訊號。
 
 ### ⑤ 錄 demo GIF 放進 README
@@ -112,7 +112,7 @@ pnpm install
 pnpm build        # 必須先 build，apps/web 是吃 core 的建置產物
 pnpm lint
 pnpm typecheck
-pnpm test         # core 150 + web 12
+pnpm test         # core 169 + web 12
 pnpm test:e2e     # Playwright 9 個，跑在正式建置版本上
 ```
 
@@ -128,6 +128,9 @@ pnpm test:e2e     # Playwright 9 個，跑在正式建置版本上
 | 路徑變形 path morph | `5e9f3e2` | `morph` preset ＋ `params.toPath`；`parse/morph.ts` 用 de Casteljau 對齊段數；CSS 出 `d: path()`，Lottie 出原生 shape keyframes；子路徑數不符發 `morph-mismatch` 警告 |
 | Hover 觸發          | `c86484d` | `Track.trigger`；CSS 掛在 `.svgm-icon:hover` 下並重列 always-on 動畫；Lottie 剔除並警告      |
 | Scroll 觸發         | `f314555` | `animation-timeline: view()`；混用時逐項配對 timeline；獨立 SVG 匯出對 scroll 另外警告      |
+| 漸層 gradient       | 本次      | 線性／放射漸層在 fill 與 stroke 都能解析與匯出；CSS/SVG/React/Vue 出 `<defs>`，Lottie 出原生 `gf`／`gs` |
+
+漸層的設計重點（詳見 `docs/lottie-mapping.md`）：**座標保持原樣，把 CTM、bounding box、`gradientTransform` 全部合成到一個 `transform` 矩陣裡**。這樣 SVG／CSS 匯出可以直接把矩陣寫到 `gradientTransform` 上，傾斜與非等比縮放都完全精確；Lottie 只認兩個點，所以只有那裡是近似值，而且會明確警告。
 
 ## 踩過的坑（別再踩一次）
 
@@ -145,7 +148,12 @@ pnpm test:e2e     # Playwright 9 個，跑在正式建置版本上
 
 **4. 圓形不要用通用弧線轉換。** 通用轉換以 120° 分割，半徑誤差約 0.15%；改用精確的四分之一圓建構（常數 `4/3 × (√2 − 1)`）可降到 0.005% 以下。圖示裡圓形和橢圓最常見，值得特例處理。
 
-**5. 同一個問題不要警告兩次。** 曾經 preset 驗證器和 Lottie 匯出器各報一次「這個形狀沒有 stroke」，措辭不同，看起來像兩個問題。已移除重複。
+**5. Lottie 圖層的 anchor 與 position 不能都設成形狀中心。**（2026-09-01 修正）
+症狀：所有 Lottie 匯出的圖形都畫在畫布左上角，只露出四分之一。
+原因：幾何已經平移到以形狀中心為原點，圖層卻同時把 `a`（anchor）和 `p`（position）都設成中心；播放器算的是 `translate(p) · rotate · scale · translate(-a)`，兩者相同就互相抵銷成單位矩陣。
+修法：`a` 設為 `[0, 0]`，只用 `p` 把形狀放回畫布位置。快照測試與結構斷言全都抓不到這個錯——**是把 JSON 丟進真正的播放器截圖比對才發現的**。已加上會失敗的回歸測試（`lottie-playback.test.ts` 會把播放器算出的座標還原出來，檢查是否落在畫布內）。
+
+**6. 同一個問題不要警告兩次。** 曾經 preset 驗證器和 Lottie 匯出器各報一次「這個形狀沒有 stroke」，措辭不同，看起來像兩個問題。已移除重複。
 
 ---
 

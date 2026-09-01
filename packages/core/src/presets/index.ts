@@ -146,7 +146,7 @@ const strokeDraw: PresetDefinition = {
     ];
   },
   validate: (_track, node) => {
-    if (node.paint.stroke === null) {
+    if (node.paint.stroke === null && !node.paint.strokeGradient) {
       return [
         {
           code: 'unsupported-paint',

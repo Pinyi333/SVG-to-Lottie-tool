@@ -67,15 +67,22 @@ Lottie 沒有「輸入事件」這個概念，所以 hover 與 scroll 動畫永�
 | 路徑變形   | ✅ `d: path()` | ✅          | ✅ 形狀關鍵格 | ✅     | ✅     |
 | Hover      | ✅ `:hover`    | ✅          | ❌ 無法表達   | ✅     | ✅     |
 | Scroll     | ✅ `view()`    | ❌          | ❌ 無法表達   | ✅     | ✅     |
+| 漸層填色   | ✅ `<defs>`    | ✅          | ⚠️ `gf`／`gs`，拉伸時為近似 | ✅ | ✅ |
 
 ## SVG 裡哪些內容會被保留
 
 支援：`path`、`rect`、`circle`、`ellipse`、`line`、`polygon`、`polyline`、
-巢狀 `g`、上述元素的 `transform`、單色填色與線條、`stroke-width`、
-`stroke-linecap`、`stroke-linejoin`、透明度、presentation 屬性與行內 `style`。
+巢狀 `g`、上述元素的 `transform`、單色填色與線條、線性與放射漸層、
+`stroke-width`、`stroke-linecap`、`stroke-linejoin`、透明度、presentation 屬性與行內 `style`。
 
-不會轉換，而且會以警告呈現而非默默丟掉：漸層與圖樣、`clipPath` 與遮罩、
+不會轉換，而且會以警告呈現而非默默丟掉：圖樣（pattern）、`clipPath` 與遮罩、
 濾鏡、`text`、`image`、`use` 參照，以及 `<style>` 區塊。請先在設計工具裡把它們展平。
+
+漸層在 CSS／SVG／React／Vue 匯出中完整保留——色標、`stop-opacity`、兩種座標系統、
+`gradientTransform`、`href` 繼承都在。Lottie 本身有漸層，但只用兩個點描述，
+因此被非正方形邊界框拉伸、或被 transform 傾斜的漸層在那裡是近似值，
+`pad` 以外的 `spreadMethod` 也無法帶過去；兩者都會出現警告。
+無法解析的 `url(#id)` 會退回它後面指定的顏色，與 SVG 的規定一致。
 
 圓形與橢圓使用精確的四分之一圓貝茲曲線建構，而不是通用的 120 度弧線轉換，
 半徑誤差因此從約 0.15% 降到 0.005% 以下。

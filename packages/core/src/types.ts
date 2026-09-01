@@ -40,10 +40,67 @@ export interface Subpath {
   closed: boolean;
 }
 
+/**
+ * A 2D affine transform in SVG's own `matrix(a b c d e f)` argument order.
+ *
+ * Kept as a tuple rather than the parser's `Matrix` so the intermediate
+ * representation stays plain data: a `ParsedSvg` survives a JSON round trip.
+ */
+export type Transform2D = [number, number, number, number, number, number];
+
+/** One stop of a gradient, with its colour already resolved to `#rrggbb`. */
+export interface GradientStop {
+  /** Position along the gradient, 0 to 1. */
+  offset: number;
+  color: string;
+  /** `stop-opacity`, 0 to 1. */
+  opacity: number;
+}
+
+/** What a gradient paints beyond its own start and end. */
+export type GradientSpread = 'pad' | 'reflect' | 'repeat';
+
+interface GradientBase {
+  /** At least two stops, ordered by offset. A single-stop source is doubled. */
+  stops: GradientStop[];
+  spread: GradientSpread;
+  /**
+   * Maps the gradient's own coordinate space onto final viewBox coordinates.
+   *
+   * Everything the parser would otherwise have to bake into the coordinates
+   * below is composed here instead: the element's transform chain, the
+   * bounding box that `gradientUnits="objectBoundingBox"` resolves against,
+   * and `gradientTransform`. Keeping it as a matrix rather than moving the
+   * points is what makes the SVG and CSS output exact under skew and
+   * non-uniform scale, where a transformed start/end pair is not enough.
+   */
+  transform: Transform2D;
+}
+
+export interface LinearGradient extends GradientBase {
+  type: 'linear';
+  start: Point;
+  end: Point;
+}
+
+export interface RadialGradient extends GradientBase {
+  type: 'radial';
+  center: Point;
+  radius: number;
+  /** Focal point. Equal to `center` unless the source set `fx`/`fy`. */
+  focus: Point;
+}
+
+export type Gradient = LinearGradient | RadialGradient;
+
 export interface Paint {
   fill: string | null;
+  /** Set when `fill` referenced a gradient. `fill` is null whenever it is. */
+  fillGradient?: Gradient;
   fillOpacity: number;
   stroke: string | null;
+  /** Set when `stroke` referenced a gradient. `stroke` is null whenever it is. */
+  strokeGradient?: Gradient;
   strokeOpacity: number;
   strokeWidth: number;
   strokeLinecap: 'butt' | 'round' | 'square';

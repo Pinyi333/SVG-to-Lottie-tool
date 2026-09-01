@@ -24,6 +24,30 @@ All notable changes to this project are documented here. The format follows
   Browsers without the feature autoplay it instead; the Lottie export drops
   such tracks with a warning, and the standalone SVG export warns that an
   image embed has no scroller.
+- Gradient paint: linear and radial gradients on a fill or a stroke are parsed
+  and exported instead of dropped. Both unit systems, `gradientTransform`,
+  `spreadMethod`, percentage lengths, `stop-opacity`, a moved focal point and
+  `href` inheritance are resolved; the CSS, SVG, React and Vue exports emit a
+  `<defs>` entry that keeps the composed matrix, and the Lottie export emits
+  native `gf` and `gs` items. Where Lottie's two-point model cannot hold the
+  gradient — a non-uniform bounding box, a skew, or a `spreadMethod` other
+  than `pad` — it exports the nearest it can and says so. `Paint` gained
+  `fillGradient` and `strokeGradient`.
+
+### Changed
+
+- A `url(#id)` fill or stroke that cannot be resolved now falls back to the
+  colour named after it, as SVG specifies, rather than leaving the shape
+  unpainted. The warning names the reference and why it failed.
+
+### Fixed
+
+- Lottie exports drew every shape around the canvas origin instead of where it
+  sat in the source, leaving most icons a quarter visible in the corner. Each
+  layer set both its anchor and its position to the shape's centre, which a
+  player composes as `translate(position) · translate(-anchor)` — exactly
+  cancelling out. The geometry is exported around its own centre, so the
+  anchor is now the origin and the position alone places the shape.
 
 ## [0.1.0] - 2026-09-01
 

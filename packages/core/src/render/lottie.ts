@@ -1,4 +1,4 @@
-import type { AnimationSpec, SvgNode, Warning } from '../types.js';
+import type { AnimationSpec, Gradient, SvgNode, Warning } from '../types.js';
 import { resolveSpec, type ResolvedTrack } from '../spec.js';
 import { expandChannel, loopsForever, type AbsoluteKeyframe } from '../timeline.js';
 import { CHANNEL_RESTING_VALUE, type ChannelName } from '../presets/channels.js';
@@ -12,6 +12,8 @@ import {
 import {
   animatedPathItem,
   fillItem,
+  gradientFillItem,
+  gradientStrokeItem,
   nodeCenter,
   pathItemsFor,
   strokeItem,
@@ -20,6 +22,7 @@ import {
   type LottieShapeItem,
   type PathKeyframe,
 } from './lottie/shapes.js';
+import { isSimilarity } from './gradient.js';
 import { subpathToBezier, translateBezier } from './lottie/path.js';
 import { interpolateSubpaths, resolveMorph } from '../parse/morph.js';
 
@@ -74,15 +77,42 @@ export interface LottieOptions {
   name?: string;
 }
 
-/** Features this exporter cannot represent, each explained once per document. */
-const LOTTIE_GAPS: { test: (spec: AnimationSpec) => boolean; message: string }[] = [
-  {
-    test: (spec) => spec.source.warnings.some((w) => w.code === 'unsupported-paint'),
-    message:
-      'Gradient and pattern fills are exported as no fill. Convert them to solid colours ' +
-      'before uploading, or use the CSS or SVG export instead.',
-  },
-];
+/**
+ * Reports the ways a document's gradients do not survive the trip to Lottie.
+ *
+ * Lottie carries gradients natively, but describes them with two points and a
+ * colour ramp — which is less than SVG says. Each shortfall is reported once
+ * per document rather than once per shape.
+ */
+function warnAboutGradients(spec: AnimationSpec, warnings: Warning[]): void {
+  const gradients = spec.source.nodes.flatMap((node) =>
+    [node.paint.fillGradient, node.paint.strokeGradient].filter(
+      (gradient): gradient is Gradient => gradient !== undefined,
+    ),
+  );
+  if (gradients.length === 0) return;
+
+  const spread = gradients.filter((gradient) => gradient.spread !== 'pad').length;
+  if (spread > 0) {
+    warnings.push({
+      code: 'lottie-unsupported',
+      message:
+        `${spread} gradient(s) repeat or reflect beyond their end stops. Lottie always ` +
+        'pads, so the area past the last stop will be a flat colour.',
+    });
+  }
+
+  const distorted = gradients.filter((gradient) => !isSimilarity(gradient.transform)).length;
+  if (distorted > 0) {
+    warnings.push({
+      code: 'lottie-unsupported',
+      message:
+        `${distorted} gradient(s) are stretched or skewed by a transform or a non-square ` +
+        'bounding box. Lottie states a gradient as two points, so those were approximated ' +
+        'with an unstretched one. Use the SVG or CSS export to keep them exact.',
+    });
+  }
+}
 
 /**
  * Merges the tracks targeting one node into a single set of channels.
@@ -193,9 +223,11 @@ function buildLayer(
 
   const items: LottieShapeItem[] = [...morphOrStaticPathItems(node, tracks, fps)];
 
-  const fill = fillItem(node.paint);
+  // The geometry was shifted onto the group's centre, so the gradient has to
+  // move with it or it would paint from the shape's old position.
+  const fill = gradientFillItem(node.paint, centre) ?? fillItem(node.paint);
   if (fill) items.push(fill);
-  const stroke = strokeItem(node.paint);
+  const stroke = gradientStrokeItem(node.paint, centre) ?? strokeItem(node.paint);
   if (stroke) items.push(stroke);
 
   const hasTrim = merged.has('trimStart') || merged.has('trimEnd');
@@ -214,14 +246,13 @@ function buildLayer(
     );
   }
 
-  // The anchor sits at the shape's centre and the geometry was shifted to
-  // match, so the position puts the shape back where it belongs on the canvas.
+  // The geometry was shifted onto the origin, so the anchor is already there
+  // and position is what puts the shape back where it belongs on the canvas:
+  // a player transforms a layer as `translate(position) · rotate · scale ·
+  // translate(-anchor)`, which would cancel out if both were the centre.
+  // Translation channels move the shape from there.
   const translateX = merged.get('translateX');
   const translateY = merged.get('translateY');
-
-  // The anchor sits at the shape's centre and the geometry was shifted to
-  // match, so position is what puts the shape back where it belongs on the
-  // canvas. Translation channels move it from there.
   const positionProperty: LottieProperty =
     !translateX && !translateY
       ? staticProperty([centre.x, centre.y])
@@ -255,7 +286,7 @@ function buildLayer(
       o: propertyFor(merged, 'opacity', fps, (v) => [v * 100 * node.paint.opacity]),
       r: propertyFor(merged, 'rotation', fps, (v) => [v]),
       p: positionProperty,
-      a: staticProperty([centre.x, centre.y]),
+      a: staticProperty([0, 0]),
       s: propertyFor(merged, 'scale', fps, (v) => [v * 100, v * 100]),
     },
     ao: 0,
@@ -331,9 +362,7 @@ export function toLottie(spec: AnimationSpec, options: LottieOptions = {}): Lott
     });
   }
 
-  for (const gap of LOTTIE_GAPS) {
-    if (gap.test(spec)) warnings.push({ code: 'lottie-unsupported', message: gap.message });
-  }
+  warnAboutGradients(spec, warnings);
 
   const byTarget = new Map<string, ResolvedTrack[]>();
   for (const track of resolved.tracks) {

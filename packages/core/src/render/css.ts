@@ -6,6 +6,7 @@ import { CHANNEL_RESTING_VALUE, isTransformChannel } from '../presets/channels.j
 import { resolveSpec, type ResolvedTrack } from '../spec.js';
 import { cycleCount } from '../timeline.js';
 import type { AnimationSpec, Paint, SvgNode, Warning } from '../types.js';
+import { GradientDefs } from './gradient.js';
 
 export interface CssOutput {
   /** The stylesheet, with no surrounding `<style>` tag. */
@@ -30,14 +31,20 @@ function slug(id: string): string {
   return cleaned === '' ? 'shape' : cleaned;
 }
 
-function paintAttributes(paint: Paint): string {
+function paintAttributes(paint: Paint, defs: GradientDefs): string {
   const parts: string[] = [];
-  parts.push(`fill="${paint.fill ?? 'none'}"`);
-  if (paint.fill !== null && paint.fillOpacity !== 1) {
+  // A gradient becomes a `<defs>` entry the paint points at; a solid colour
+  // stays inline. Both go through the same attributes so the rest of the
+  // markup does not have to care which one a shape uses.
+  const fill = paint.fillGradient ? defs.reference(paint.fillGradient) : paint.fill;
+  const stroke = paint.strokeGradient ? defs.reference(paint.strokeGradient) : paint.stroke;
+
+  parts.push(`fill="${fill ?? 'none'}"`);
+  if (fill !== null && paint.fillOpacity !== 1) {
     parts.push(`fill-opacity="${round(paint.fillOpacity)}"`);
   }
-  if (paint.stroke !== null) {
-    parts.push(`stroke="${paint.stroke}"`);
+  if (stroke !== null) {
+    parts.push(`stroke="${stroke}"`);
     parts.push(`stroke-width="${round(paint.strokeWidth)}"`);
     parts.push(`stroke-linecap="${paint.strokeLinecap}"`);
     parts.push(`stroke-linejoin="${paint.strokeLinejoin}"`);
@@ -205,6 +212,7 @@ export function toCss(spec: AnimationSpec, options: CssOptions = {}): CssOutput 
   const rules: string[] = [];
   const keyframeBlocks: string[] = [];
   const markup: string[] = [];
+  const defs = new GradientDefs(prefix, precision);
 
   for (const node of spec.source.nodes) {
     const tracks = byTarget.get(node.id) ?? [];
@@ -219,7 +227,7 @@ export function toCss(spec: AnimationSpec, options: CssOptions = {}): CssOutput 
     const firstMorph = [...morphs.values()].find((m) => m !== null);
     const d = subpathsToPathData(firstMorph ? firstMorph.from : node.subpaths, precision);
 
-    markup.push(`  <path class="${className}" d="${d}" ${paintAttributes(node.paint)} />`);
+    markup.push(`  <path class="${className}" d="${d}" ${paintAttributes(node.paint, defs)} />`);
 
     if (tracks.length === 0) continue;
 
@@ -325,11 +333,16 @@ export function toCss(spec: AnimationSpec, options: CssOptions = {}): CssOutput 
   // so the hover selector hangs off a class on the root rather than the shape.
   const hasHover = resolved.tracks.some((track) => track.track.trigger === 'hover');
   const rootClass = hasHover ? `class="${prefix}-icon" ` : '';
+  // `<defs>` has to precede the shapes that reference it for the markup to
+  // stay valid when it is streamed or truncated, even though SVG itself would
+  // resolve a forward reference.
+  const defsMarkup = defs.markup('  ');
+  const body = defsMarkup === '' ? markup.join('\n') : `${defsMarkup}\n${markup.join('\n')}`;
   const html =
     `<svg ${rootClass}xmlns="http://www.w3.org/2000/svg" ` +
     `viewBox="${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}" ` +
     `width="${spec.source.width}" height="${spec.source.height}">\n` +
-    `${markup.join('\n')}\n</svg>`;
+    `${body}\n</svg>`;
 
   return { css, html, warnings: [...spec.source.warnings, ...resolved.warnings] };
 }

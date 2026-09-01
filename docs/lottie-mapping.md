@@ -129,11 +129,39 @@ SVG paints in document order: the last element is on top. Lottie paints its
 first layer on top. Emitting layers in source order silently inverts the
 stacking of every overlapping icon.
 
+## Gradients are native, but say less
+
+Lottie carries gradients as `gf` (fill) and `gs` (stroke) items, so a gradient
+survives the export as a real gradient rather than a flattened colour. The
+format states one with less than SVG does, and the difference is worth knowing:
+
+| SVG                                    | Lottie                                            |
+| -------------------------------------- | ------------------------------------------------- |
+| `x1 y1 x2 y2`                          | `s` and `e`, the same two points                  |
+| `cx cy r`                              | `s` at the centre, `e` one radius away            |
+| `fx fy`                                | `h` (percent of the radius) and `a` (degrees)     |
+| stops with `stop-opacity`              | `g.k`: `[offset,r,g,b]…` then `[offset,alpha]…`   |
+| `gradientUnits`, `gradientTransform`   | nothing — folded into the two points              |
+| `spreadMethod`                         | nothing — always pads                             |
+
+The last two rows are where fidelity is lost. Two points can express any
+rotation, uniform scale and translation exactly, but not the ellipse a
+non-square bounding box makes of a radial gradient, nor the slanted colour
+bands a skew makes of a linear one. The exporter checks whether a gradient's
+composed matrix is a similarity and, when it is not, exports the unstretched
+approximation and says so. The CSS and SVG exports keep the matrix on
+`gradientTransform` and stay exact.
+
+The colour ramp is one flat array with the colour stops first and the opacity
+stops after them, so a fading gradient repeats its offsets in both sections.
+The alpha section is written only when a stop actually asks for transparency;
+players treat its absence as fully opaque.
+
 ## What has no equivalent
 
-Gradients, patterns, masks, `clipPath`, filters, text, images, `use`, and blend
-modes. Some of these have Lottie representations that are out of scope here;
-others have none. Either way they are reported as warnings rather than dropped,
+Patterns, masks, `clipPath`, filters, text, images, `use`, and blend modes.
+Some of these have Lottie representations that are out of scope here; others
+have none. Either way they are reported as warnings rather than dropped,
 because an export tool that quietly discards half a drawing is worse than one
 that refuses.
 

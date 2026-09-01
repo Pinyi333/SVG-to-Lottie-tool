@@ -4,27 +4,12 @@ import { createSpec, createTrack } from '../src/spec.js';
 import { toLottie } from '../src/render/lottie.js';
 import { subpathToBezier } from '../src/render/lottie/path.js';
 import type { LottieShapeItem } from '../src/render/lottie/shapes.js';
-import { fixture } from './helpers.js';
+import { fixture, itemAs, itemsOf } from './helpers.js';
 
 function specFor(name: string, tracks: ReturnType<typeof createTrack>[] = []) {
   const spec = createSpec(parseSvg(fixture(name)));
   spec.tracks = tracks;
   return spec;
-}
-
-/** Narrows a shape item to the fields a given assertion needs. */
-function itemAs<T>(items: LottieShapeItem[], ty: string): T {
-  const found = items.find((item) => item.ty === ty);
-  expect(found, `no "${ty}" item in group`).toBeDefined();
-  return found as unknown as T;
-}
-
-/** Pulls the shape items out of a layer's single group. */
-function itemsOf(animation: ReturnType<typeof toLottie>['animation'], layerName: string) {
-  const layer = animation.layers.find((l) => l.nm === layerName);
-  expect(layer, `layer "${layerName}" is missing`).toBeDefined();
-  const group = layer!.shapes[0] as LottieShapeItem;
-  return group.it as LottieShapeItem[];
 }
 
 describe('document structure', () => {
@@ -127,7 +112,10 @@ describe('bezier mapping', () => {
 
     for (const node of parsed.nodes) {
       const layer = animation.layers.find((l) => l.nm === node.id)!;
+      // A player draws a vertex at `position + (vertex - anchor)`, so that is
+      // what has to land back on the source geometry.
       const anchor = (layer.ks.a as { k: number[] }).k;
+      const position = (layer.ks.p as { k: number[] }).k;
       const group = layer.shapes[0] as LottieShapeItem;
       const path = itemAs<{ ks: { k: { v: [number, number][] } } }>(
         group.it as LottieShapeItem[],
@@ -137,7 +125,7 @@ describe('bezier mapping', () => {
       let minX = Infinity;
       let maxX = -Infinity;
       for (const [x] of path.ks.k.v) {
-        const absolute = x + anchor[0]!;
+        const absolute = position[0]! + (x - anchor[0]!);
         minX = Math.min(minX, absolute);
         maxX = Math.max(maxX, absolute);
       }
@@ -171,9 +159,16 @@ describe('animated properties', () => {
   it('anchors rotation on the shape centre, not the canvas origin', () => {
     const { animation } = toLottie(specFor('shapes.svg', [createTrack('dot', 'rotate')]));
     const layer = animation.layers.find((l) => l.nm === 'dot')!;
-    // circle(cx=70, cy=20)
-    expect((layer.ks.a as { k: number[] }).k).toEqual([70, 20]);
+    const items = itemsOf(animation, 'dot');
+    const path = itemAs<{ ks: { k: { v: [number, number][] } } }>(items, 'sh');
+
+    // The geometry is centred on the origin, which is where the anchor is, so
+    // the layer turns about the shape rather than about the canvas corner.
+    expect((layer.ks.a as { k: number[] }).k).toEqual([0, 0]);
+    // circle(cx=70, cy=20): position is what puts it back on the canvas.
     expect((layer.ks.p as { k: number[] }).k).toEqual([70, 20]);
+    const xs = path.ks.k.v.map(([x]) => x);
+    expect(Math.min(...xs) + Math.max(...xs)).toBeCloseTo(0, 6);
   });
 
   it('offsets position from the shape centre when translating', () => {
