@@ -1,4 +1,5 @@
 import { subpathsToPathData } from '../parse/geometry.js';
+import { interpolateSubpaths, resolveMorph, type AlignedMorph } from '../parse/morph.js';
 import { toCssEasing } from '../easing.js';
 import type { Channel, Keyframe } from '../presets/channels.js';
 import { CHANNEL_RESTING_VALUE, isTransformChannel } from '../presets/channels.js';
@@ -129,11 +130,39 @@ function easingAt(channels: Channel[], t: number, fallback: string): string {
   return fallback;
 }
 
-function declarationsAt(channels: Channel[], node: SvgNode, t: number): string[] {
+/**
+ * Resolves the aligned morph geometry for one track, or null when the track
+ * does not morph or its target cannot be paired with the node.
+ *
+ * The failure cases are already reported by the preset's `validate`, so this
+ * quietly renders the shape unmorphed rather than warning a second time.
+ */
+function morphFor(track: ResolvedTrack): AlignedMorph | null {
+  if (!track.channels.some((c) => c.name === 'morphProgress')) return null;
+  return resolveMorph(track.track.params.toPath, track.node.subpaths);
+}
+
+function declarationsAt(
+  channels: Channel[],
+  node: SvgNode,
+  t: number,
+  morph: AlignedMorph | null,
+  precision: number,
+): string[] {
   const declarations: string[] = [];
 
   const opacity = channels.find((c) => c.name === 'opacity');
   if (opacity) declarations.push(`opacity: ${round(valueAt(opacity, t))};`);
+
+  const progress = channels.find((c) => c.name === 'morphProgress');
+  if (progress && morph) {
+    // CSS interpolates `d: path()` between keyframes on its own, but only when
+    // every stop has the same command structure — which the aligned geometry
+    // guarantees. The browser does the in-between frames; the stops here only
+    // pin the values the keyframes were authored at.
+    const shape = interpolateSubpaths(morph.from, morph.to, valueAt(progress, t));
+    declarations.push(`d: path("${subpathsToPathData(shape, precision)}");`);
+  }
 
   const transform = transformAt(channels, t);
   if (transform) declarations.push(`transform: ${transform};`);
@@ -180,7 +209,15 @@ export function toCss(spec: AnimationSpec, options: CssOptions = {}): CssOutput 
   for (const node of spec.source.nodes) {
     const tracks = byTarget.get(node.id) ?? [];
     const className = `${prefix}-${slug(node.id)}`;
-    const d = subpathsToPathData(node.subpaths, precision);
+
+    const morphs = new Map<ResolvedTrack, AlignedMorph | null>();
+    for (const track of tracks) morphs.set(track, morphFor(track));
+
+    // A morphing path's base `d` uses the aligned source geometry: it draws
+    // the same shape, but shares its command structure with every keyframe
+    // stop so the browser agrees to interpolate them.
+    const firstMorph = [...morphs.values()].find((m) => m !== null);
+    const d = subpathsToPathData(firstMorph ? firstMorph.from : node.subpaths, precision);
 
     markup.push(`  <path class="${className}" d="${d}" ${paintAttributes(node.paint)} />`);
 
@@ -197,7 +234,7 @@ export function toCss(spec: AnimationSpec, options: CssOptions = {}): CssOutput 
 
       const steps = keyframePositions(channels)
         .map((t) => {
-          const body = declarationsAt(channels, node, t);
+          const body = declarationsAt(channels, node, t, morphs.get(resolvedTrack) ?? null, precision);
           if (body.length === 0) return null;
           const timing = easingAt(channels, t, fallbackEasing);
           // Declaring the timing function inside each stop is what lets a

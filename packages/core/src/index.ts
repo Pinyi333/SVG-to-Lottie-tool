@@ -2,6 +2,13 @@ export * from './types.js';
 export { parseSvg, type ParseOptions } from './parse/index.js';
 export { subpathsToPathData } from './parse/geometry.js';
 export {
+  alignForMorph,
+  interpolateSubpaths,
+  parseMorphTarget,
+  resolveMorph,
+  type AlignedMorph,
+} from './parse/morph.js';
+export {
   EASINGS,
   EASING_NAMES,
   easing,

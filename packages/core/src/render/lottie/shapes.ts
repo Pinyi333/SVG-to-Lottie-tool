@@ -1,5 +1,6 @@
 import { parseColor, toLottieColor } from '../../parse/color.js';
-import type { Paint, Point, SvgNode } from '../../types.js';
+import { toLottieHandles } from '../../easing.js';
+import type { Easing, Paint, Point, SvgNode } from '../../types.js';
 import { subpathToBezier, translateBezier, type LottieBezier } from './path.js';
 import { staticProperty, type LottieProperty } from './keyframe.js';
 
@@ -15,6 +16,42 @@ export interface LottieShapeItem {
 /** A `sh` item: one bezier path. */
 export function pathItem(bezier: LottieBezier, index: number): LottieShapeItem {
   return { ty: 'sh', ind: index, ks: { a: 0, k: bezier }, nm: `Path ${index + 1}` };
+}
+
+/** One stop of an animated path: the full bezier the shape holds at `time`. */
+export interface PathKeyframe {
+  /** Seconds on the absolute timeline. */
+  time: number;
+  bezier: LottieBezier;
+  /** Easing towards the next keyframe. Ignored on the last one. */
+  easing: Easing;
+}
+
+/**
+ * A `sh` item whose geometry animates: Lottie shape keyframes hold the whole
+ * vertex set in `s`, one complete bezier per stop, and interpolate every
+ * vertex and tangent between them.
+ */
+export function animatedPathItem(
+  keyframes: PathKeyframe[],
+  fps: number,
+  index: number,
+): LottieShapeItem {
+  const round = (n: number): number => Number(n.toFixed(4));
+  const k = keyframes.map((keyframe, i) => {
+    const frame: Record<string, unknown> = {
+      t: round(keyframe.time * fps),
+      s: [keyframe.bezier],
+    };
+    if (i < keyframes.length - 1) {
+      const handles = toLottieHandles(keyframe.easing);
+      frame.o = { x: [handles.out.x], y: [handles.out.y] };
+      frame.i = { x: [handles.in.x], y: [handles.in.y] };
+    }
+    return frame;
+  });
+
+  return { ty: 'sh', ind: index, ks: { a: 1, k }, nm: `Path ${index + 1}` };
 }
 
 /** An `fl` item: a solid fill. Returns null when the shape has no fill. */

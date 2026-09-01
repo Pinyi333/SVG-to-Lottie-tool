@@ -37,6 +37,7 @@ interface Settings {
   degrees: number;
   height: number;
   reverse: boolean;
+  toPath: string;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -49,6 +50,7 @@ const DEFAULT_SETTINGS: Settings = {
   degrees: 360,
   height: 8,
   reverse: false,
+  toPath: '',
 };
 
 /** Builds the parameters a preset actually reads, so unrelated knobs stay out. */
@@ -60,6 +62,8 @@ function paramsFor(settings: Settings): Track['params'] {
       return { height: settings.height };
     case 'strokeDraw':
       return { reverse: settings.reverse };
+    case 'morph':
+      return { toPath: settings.toPath };
     default:
       return {};
   }
@@ -356,6 +360,18 @@ export function Animate({ onSendToPlayground }: { onSendToPlayground: (data: unk
                   max={40}
                   step={1}
                   onChange={(value) => update('height', value)}
+                />
+              </Field>
+            ) : null}
+
+            {settings.preset === 'morph' ? (
+              <Field label={t.animation.morphTarget} hint={t.animation.morphTargetHint}>
+                <textarea
+                  className="h-24 w-full resize-y rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 font-mono text-xs dark:border-slate-700 dark:bg-slate-800"
+                  value={settings.toPath}
+                  placeholder="M60 10 L80 10 L80 30 L60 30 Z"
+                  spellCheck={false}
+                  onChange={(event) => update('toPath', event.target.value)}
                 />
               </Field>
             ) : null}

@@ -40,6 +40,10 @@ export const en = {
     to: 'To',
     height: 'Hop height',
     reverse: 'Draw from the far end',
+    morphTarget: 'Morph into (path data)',
+    morphTargetHint:
+      'Paste the `d` of the path to morph into, drawn in the same viewBox. ' +
+      'It must have the same number of subpaths as the shape.',
   },
 
   presets: {
@@ -48,6 +52,7 @@ export const en = {
     scale: 'Scale',
     rotate: 'Rotate',
     bounce: 'Bounce',
+    morph: 'Path morph',
   },
 
   preview: {

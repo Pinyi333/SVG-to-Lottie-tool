@@ -1,4 +1,5 @@
 import { EASINGS } from '../easing.js';
+import { alignForMorph, parseMorphTarget } from '../parse/morph.js';
 import type { PresetName, SvgNode, Track, Warning } from '../types.js';
 import type { Channel, Keyframe } from './channels.js';
 
@@ -160,12 +161,68 @@ const strokeDraw: PresetDefinition = {
   },
 };
 
+const morph: PresetDefinition = {
+  name: 'morph',
+  summary: 'Reshapes the path into a target path.',
+  lottieSupported: true,
+  build: () => [
+    {
+      name: 'morphProgress',
+      keyframes: [
+        { t: 0, value: 0 },
+        { t: 1, value: 1 },
+      ],
+    },
+  ],
+  validate: (track, node) => {
+    const raw = track.params.toPath;
+    if (!raw || raw.trim() === '') {
+      return [
+        {
+          code: 'morph-mismatch',
+          subject: node.id,
+          message:
+            `The morph on "${node.id}" has no target path, so the shape will not change. ` +
+            'Set params.toPath to the path data to morph into.',
+        },
+      ];
+    }
+
+    const target = parseMorphTarget(raw);
+    if (target.length === 0) {
+      return [
+        {
+          code: 'morph-mismatch',
+          subject: node.id,
+          message: `The morph target for "${node.id}" could not be parsed as path data.`,
+        },
+      ];
+    }
+
+    if (!alignForMorph(node.subpaths, target)) {
+      return [
+        {
+          code: 'morph-mismatch',
+          subject: node.id,
+          message:
+            `"${node.id}" has ${node.subpaths.length} subpath(s) but its morph target has ` +
+            `${target.length}. There is no sensible way to pair them, so the morph was skipped. ` +
+            'Redraw the target with the same number of subpaths.',
+        },
+      ];
+    }
+
+    return [];
+  },
+};
+
 export const PRESETS: Record<PresetName, PresetDefinition> = {
   fade,
   scale,
   rotate,
   bounce,
   strokeDraw,
+  morph,
 };
 
 export const PRESET_NAMES = Object.keys(PRESETS) as PresetName[];

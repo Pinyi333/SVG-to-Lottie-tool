@@ -83,7 +83,8 @@ export type WarningCode =
   | 'removed-for-safety'
   | 'missing-viewbox'
   | 'lottie-unsupported'
-  | 'empty-document';
+  | 'empty-document'
+  | 'morph-mismatch';
 
 export interface Warning {
   code: WarningCode;
@@ -92,7 +93,7 @@ export interface Warning {
   subject?: string;
 }
 
-export type PresetName = 'strokeDraw' | 'fade' | 'scale' | 'rotate' | 'bounce';
+export type PresetName = 'strokeDraw' | 'fade' | 'scale' | 'rotate' | 'bounce' | 'morph';
 
 export type LoopMode = 'none' | 'loop' | 'pingpong';
 
@@ -141,6 +142,11 @@ export interface PresetParams {
   height?: number;
   /** strokeDraw: draw from the end of the path instead of the start. */
   reverse?: boolean;
+  /**
+   * morph: target path data (`d` string) in the same viewBox coordinates as
+   * the shape being morphed. Must contain the same number of subpaths.
+   */
+  toPath?: string;
 }
 
 export interface AnimationSpec {

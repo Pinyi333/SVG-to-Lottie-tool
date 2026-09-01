@@ -42,6 +42,8 @@ export const zhTW: Dictionary = {
     to: '結束值',
     height: '彈跳高度',
     reverse: '從另一端開始描繪',
+    morphTarget: '變形目標（路徑資料）',
+    morphTargetHint: '貼上要變形成的路徑 `d` 值，座標需在同一個 viewBox 內，子路徑數量必須和原形狀相同。',
   },
 
   presets: {
@@ -50,6 +52,7 @@ export const zhTW: Dictionary = {
     scale: '縮放',
     rotate: '旋轉',
     bounce: '彈跳',
+    morph: '路徑變形',
   },
 
   preview: {

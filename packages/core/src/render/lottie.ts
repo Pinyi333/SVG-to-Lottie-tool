@@ -10,6 +10,7 @@ import {
   type LottieProperty,
 } from './lottie/keyframe.js';
 import {
+  animatedPathItem,
   fillItem,
   nodeCenter,
   pathItemsFor,
@@ -17,7 +18,10 @@ import {
   transformItem,
   trimItem,
   type LottieShapeItem,
+  type PathKeyframe,
 } from './lottie/shapes.js';
+import { subpathToBezier, translateBezier } from './lottie/path.js';
+import { interpolateSubpaths, resolveMorph } from '../parse/morph.js';
 
 /**
  * The Lottie schema version this exporter targets.
@@ -130,6 +134,51 @@ function propertyFor(
   return animatedProperty(channel.keyframes, fps, transform);
 }
 
+/**
+ * Builds the path items for a node: static beziers normally, or animated
+ * shape keyframes when a morph track targets it.
+ *
+ * Lottie has native geometry interpolation — a `sh` item's `ks` can carry one
+ * complete bezier per keyframe — so a morph maps onto exactly the feature the
+ * format designed for it, and stays editable in After Effects.
+ */
+function morphOrStaticPathItems(
+  node: SvgNode,
+  tracks: ResolvedTrack[],
+  fps: number,
+): LottieShapeItem[] {
+  for (const resolved of tracks) {
+    const progress = resolved.channels.find((channel) => channel.name === 'morphProgress');
+    if (!progress) continue;
+    const aligned = resolveMorph(resolved.track.params.toPath, node.subpaths);
+    if (!aligned) continue;
+
+    const centre = nodeCenter(node);
+    // Every repetition of a loop has to exist as data on Lottie's timeline.
+    const keyframes = expandChannel(progress, resolved.track);
+    if (keyframes.length === 0) break;
+
+    // A delayed morph still needs its resting shape from frame 0.
+    if (keyframes[0]!.time > 0) {
+      keyframes.unshift({ time: 0, value: keyframes[0]!.value, easing: resolved.track.easing });
+    }
+
+    return aligned.from.map((_, index) => {
+      const pathKeyframes: PathKeyframe[] = keyframes.map((keyframe) => ({
+        time: keyframe.time,
+        bezier: translateBezier(
+          subpathToBezier(interpolateSubpaths(aligned.from, aligned.to, keyframe.value)[index]!),
+          centre,
+        ),
+        easing: keyframe.easing,
+      }));
+      return animatedPathItem(pathKeyframes, fps, index);
+    });
+  }
+
+  return pathItemsFor(node);
+}
+
 function buildLayer(
   node: SvgNode,
   tracks: ResolvedTrack[],
@@ -142,7 +191,7 @@ function buildLayer(
   const centre = nodeCenter(node);
   const fps = spec.fps;
 
-  const items: LottieShapeItem[] = [...pathItemsFor(node)];
+  const items: LottieShapeItem[] = [...morphOrStaticPathItems(node, tracks, fps)];
 
   const fill = fillItem(node.paint);
   if (fill) items.push(fill);

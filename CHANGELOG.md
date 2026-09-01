@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Path morph effect (`morph` preset): reshapes a path into a target `d` string
+  passed as `params.toPath`. Exports to CSS (`d: path()` keyframes, inherited
+  by the SVG, React and Vue outputs) and to Lottie as native shape keyframes.
+  Mismatched segment counts are aligned by subdividing curves; mismatched
+  subpath counts are reported as a `morph-mismatch` warning instead of guessed
+  at.
+
 ## [0.1.0] - 2026-09-01
 
 First release.

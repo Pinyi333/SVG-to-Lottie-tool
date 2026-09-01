@@ -20,7 +20,13 @@ export type ChannelName =
   /** 0..1 fraction of the outline where the visible stroke begins. */
   | 'trimStart'
   /** 0..1 fraction of the outline where the visible stroke ends. */
-  | 'trimEnd';
+  | 'trimEnd'
+  /**
+   * 0..1 progress towards the morph target path. The geometry itself is not a
+   * channel value: exporters read the target from `Track.params.toPath` and
+   * interpolate in whatever way their format supports.
+   */
+  | 'morphProgress';
 
 export interface Keyframe {
   /** Position within the track, 0 at its start and 1 at its end. */
@@ -48,6 +54,7 @@ export const CHANNEL_RESTING_VALUE: Record<ChannelName, number> = {
   translateY: 0,
   trimStart: 0,
   trimEnd: 1,
+  morphProgress: 0,
 };
 
 /** True when the channel is expressed through a CSS `transform` function. */

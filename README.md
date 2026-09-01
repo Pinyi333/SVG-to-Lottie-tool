@@ -74,7 +74,7 @@ only. Saying so plainly beats exporting a file that silently does nothing.
 | Rotate           | ✅                                                          | ✅          | ✅                 | ✅      | ✅      |
 | Bounce           | ✅                                                          | ✅          | ✅                 | ✅      | ✅      |
 | Loop / ping-pong | ✅                                                          | ✅          | ✅                 | ✅      | ✅      |
-| Path morph       | [#1](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues) | planned     | planned            | planned | planned |
+| Path morph       | ✅ `d: path()`                                              | ✅          | ✅ shape keyframes | ✅      | ✅      |
 | Hover            | planned                                                     | ✅ `:hover` | ❌ not expressible | planned | planned |
 | Scroll           | planned                                                     | ❌          | ❌ not expressible | planned | planned |
 
