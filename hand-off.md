@@ -3,7 +3,7 @@
 > 這份文件記錄專案的**當下真實狀態**，給下一個接手的人（或下一個 session）在三分鐘內進入狀況。
 > 每完成一件事就更新，不要等到最後才補。更新規則見文件末尾。
 
-**最後更新：** 2026-09-01 · 狀態對應 commit `93298ad`（最後一次改變專案狀態的 commit）
+**最後更新：** 2026-09-01 · 狀態對應 commit `6b79752`（最後一次改變專案狀態的 commit）
 
 ---
 
@@ -129,7 +129,7 @@ pnpm test:e2e     # Playwright 10 個，跑在正式建置版本上
 | Hover 觸發          | `c86484d` | `Track.trigger`；CSS 掛在 `.svgm-icon:hover` 下並重列 always-on 動畫；Lottie 剔除並警告                                                                                        |
 | Scroll 觸發         | `f314555` | `animation-timeline: view()`；混用時逐項配對 timeline；獨立 SVG 匯出對 scroll 另外警告                                                                                         |
 | 漸層 gradient       | `93298ad` | 線性／放射漸層在 fill 與 stroke 都能解析與匯出；CSS/SVG/React/Vue 出 `<defs>`，Lottie 出原生 `gf`／`gs`                                                                        |
-| dotLottie 輸出      | 本次      | `toDotLottie`：ZIP＋manifest；loop 設定終於有地方放；deflate 壓縮（bars 23KB → 1.1KB）；固定時間戳所以位元組可重現                                                             |
+| dotLottie 輸出      | `6b79752` | `toDotLottie`：ZIP＋manifest；loop 設定終於有地方放；deflate 壓縮（bars 23KB → 1.1KB）；固定時間戳所以位元組可重現                                                             |
 
 漸層的設計重點（詳見 `docs/lottie-mapping.md`）：**座標保持原樣，把 CTM、bounding box、`gradientTransform` 全部合成到一個 `transform` 矩陣裡**。這樣 SVG／CSS 匯出可以直接把矩陣寫到 `gradientTransform` 上，傾斜與非等比縮放都完全精確；Lottie 只認兩個點，所以只有那裡是近似值，而且會明確警告。
 
