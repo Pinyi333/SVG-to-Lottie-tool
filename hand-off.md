@@ -70,13 +70,13 @@ release workflow 會先跑完整測試、確認 tag 與套件版本一致才發�
 
 原訂的五項功能全部做完，所以開的是新的一批（2026-09-01）：
 
-| #                                                              | 主題                                  | 標籤                                        |
-| -------------------------------------------------------------- | ------------------------------------- | ------------------------------------------- |
-| [#2](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/2) | 套用 `<style>` 區塊而不是只發警告      | enhancement · good first issue · help wanted |
-| [#3](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/3) | 解析階段展平 `<use>` 參照              | enhancement · help wanted                    |
-| [#4](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/4) | Lottie 匯出近似 `reflect`／`repeat`    | enhancement · help wanted                    |
-| [#5](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/5) | 一個 `.lottie` 封存多支動畫            | enhancement · help wanted                    |
-| [#6](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/6) | 在 Firefox／Safari 實測 morph          | good first issue · help wanted                |
+| #                                                             | 主題                                | 標籤                                         |
+| ------------------------------------------------------------- | ----------------------------------- | -------------------------------------------- |
+| [#2](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/2) | 套用 `<style>` 區塊而不是只發警告   | enhancement · good first issue · help wanted |
+| [#3](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/3) | 解析階段展平 `<use>` 參照           | enhancement · help wanted                    |
+| [#4](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/4) | Lottie 匯出近似 `reflect`／`repeat` | enhancement · help wanted                    |
+| [#5](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/5) | 一個 `.lottie` 封存多支動畫         | enhancement · help wanted                    |
+| [#6](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/6) | 在 Firefox／Safari 實測 morph       | good first issue · help wanted               |
 
 每一則都寫了「從哪個檔案下手」，#6 甚至不需要架環境——開瀏覽器看完回報就是完整貢獻。
 **這是加分項**——公開 roadmap 是「活躍維護」的訊號。
