@@ -32,10 +32,18 @@ export default defineConfig({
   webServer: {
     // Serves the existing build rather than making one. The root `test:e2e`
     // script builds first, and CI has its own build step; building again here
-    // doubled the work and blew past this timeout on a cold runner.
-    command: 'pnpm preview --port 4173 --strictPort',
+    // duplicated the work for no benefit.
+    //
+    // The host is pinned to IPv4. Vite's default binds to `localhost`, which
+    // resolves to ::1 first on CI runners, while Playwright polls 127.0.0.1 —
+    // the server comes up fine and the wait still times out.
+    command: 'pnpm preview --port 4173 --strictPort --host 127.0.0.1',
     url: 'http://127.0.0.1:4173/SVG-to-Lottie-tool/',
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
+    // Without this the server's own output is swallowed, so a startup failure
+    // surfaces only as an unexplained timeout.
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 });
