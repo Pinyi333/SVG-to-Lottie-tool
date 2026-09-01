@@ -1,82 +1,165 @@
-# Hand-off 交接文件
+# 交接紀錄 Hand-off
 
-> 本檔案用於記錄專案即時進度與待辦事項。**有新進度請隨時更新此檔。**
-> 最後更新：2026-09-01（Path morph、Hover、Scroll 觸發已完成）
+> 這份文件記錄專案的**當下真實狀態**，給下一個接手的人（或下一個 session）在三分鐘內進入狀況。
+> 每完成一件事就更新，不要等到最後才補。更新規則見文件末尾。
 
-## 專案是什麼
+**最後更新：** 2026-09-01 · 狀態對應 commit `f314555`（最後一次改變專案狀態的 commit）
 
-**SVGMotion** — 把靜態 SVG 圖示變成動畫，並匯出為 **Lottie JSON / CSS / 獨立 SVG / React / Vue 元件**。
-所有解析、動畫、匯出皆在本機完成，不上傳任何檔案。
+---
 
-- 線上版：https://pinyi333.github.io/SVG-to-Lottie-tool/
-- npm 套件：`svgmotion`（框架無關、無 UI 依賴的 TypeScript 函式庫）
+## 一句話狀態
 
-## 架構（pnpm monorepo，Node >= 20）
+核心引擎與網頁工具都已完成並通過測試，**CI 全綠**，v0.2 roadmap 的五項功能已完成三項（path morph、hover、scroll）；卡在 GitHub Pages 尚未啟用，demo 網址還沒生出來，因此還不能送 Codex for OSS 申請。
 
-| 位置 | 內容 |
-| --- | --- |
-| `packages/core/` | `svgmotion` 核心：SVG 解析（sanitize + 幾何正規化）、easing / preset / timeline、Lottie / CSS / SVG / React / Vue exporter |
-| `apps/web/` | React 網頁前端：**Animate** 工作區（上傳 SVG → 選效果 → 預覽 → 匯出）與 **Lottie Playground**（調整 Lottie 播放參數、複製嵌入片段），含 i18n |
-| `examples/` | 以 build script 方式使用套件的範例 workspace |
-| `docs/lottie-mapping.md` | Lottie 對應關係參考文件 |
-| `.github/` | CI workflows、issue templates |
+---
 
-常用指令：`pnpm dev`（開發）、`pnpm build`、`pnpm test`、`pnpm typecheck`、`pnpm lint`、`pnpm test:e2e`
+## 這個專案是什麼
 
-## 目前進度（依 git 歷史）
+**SVGMotion** — 把靜態 SVG 圖示變成動畫，匯出成 Lottie JSON / CSS / 獨立 SVG / React / Vue。
+另附一個 Lottie Playground（拖 `.json` 進去調播放參數、產生嵌入碼）。
 
-- ✅ core：SVG 解析管線、easing / preset / timeline 層
-- ✅ core：CSS、獨立 SVG、Lottie（含播放驗證）、React、Vue exporter
-- ✅ web：Animate 與 Playground 兩個工作區
-- ✅ 文件：README（中英）、CONTRIBUTING、Lottie mapping 參考
-- ✅ CI：workflows、issue templates、web 單元測試
-- ✅ examples workspace
-- ✅ `95fc935` 新增 GitHub 操作工具腳本（`github-init.bat`、`github-pull.bat`、`update-github.bat`）
-- ✅ **Path morph 效果（issue #1）完成，尚未 commit**（2026-09-01）：
-  - core：新增 `morph` preset（`params.toPath` 指定目標路徑）＋ `morphProgress` channel
-  - 新模組 `packages/core/src/parse/morph.ts`：de Casteljau 細分對齊兩條路徑的段數、線性插值；子路徑數不符時發出 `morph-mismatch` 警告而非亂配
-  - CSS exporter 輸出 `d: path()` keyframes（SVG / React / Vue 匯出自動繼承）
-  - Lottie exporter 輸出原生 shape keyframes（`sh` item 動畫化，頂點數恆定）
-  - Web UI：Animate 面板新增「路徑變形」選項與目標路徑輸入框（中英 i18n 已加）
-  - 測試：新增 `packages/core/test/morph.test.ts` 13 個測試；全套 140/140 通過，typecheck / eslint 乾淨
-  - 文件：README（中英）、packages/core/README、CHANGELOG（Unreleased）已更新
+**做這個的目的**：申請 OpenAI 的 **Codex for Open Source**，通過可得 6 個月免費 ChatGPT Pro。
+評分看四項：repo 使用量、生態系重要性、活躍維護證據、申請人的實際維護者角色。
 
-- ✅ `5e9f3e2` **Path morph 已 commit**（含 golden 快照修正：morph 有給 `toPath` 的合理基準）
-- ✅ `c86484d` **Hover 觸發已 commit**（2026-09-01，全套 146/146 測試通過）：
-  - core：`Track.trigger?: 'auto' | 'hover'`（新型別 `TrackTrigger`，預設 auto，舊 spec 相容）
-  - CSS：hover tracks 的 animation 掛在 `.svgm-icon:hover .svgm-<id>` 規則下；有 hover 時根 `<svg>` 加 `svgm-icon` class；hover 規則會重列 always-on 動畫避免 `animation` 覆蓋
-  - Lottie：hover tracks 在 resolve 前被剔除並發 `lottie-unsupported` 警告（不影響時間軸與 loop 判定）
-  - Web UI：Animate 面板新增「播放時機」選單（載入時／滑鼠懸停時），中英 i18n
-  - 測試：新增 `packages/core/test/hover.test.ts` 6 個測試
-- ✅ `f314555` **Scroll 觸發已 commit**（2026-09-01，全套 150/150 測試通過）：
-  - core：`TrackTrigger` 擴充為 `'auto' | 'hover' | 'scroll'`
-  - CSS：scroll tracks 用 `animation-timeline: view()` 隨捲動推進；混用時逐項配對 timeline（`auto, view()`）；不支援的瀏覽器自動退回直接播放
-  - Lottie：hover/scroll 一併剔除＋警告；獨立 SVG 匯出對 scroll 發 `trigger-unsupported` 警告（`<img>` 內無捲動上下文）
-  - Web UI：「播放時機」加入「捲動時」選項
+---
 
-## 效果 × 匯出格式支援現況
+## 目前狀態總覽
 
-**README 支援表已全部落地**：七種效果（Stroke draw / Fade / Scale / Rotate / Bounce / Loop / Path morph）五種格式全支援；Hover 與 Scroll 以 `trigger` 落地於 CSS/React/Vue（Lottie 本質上無法表達，匯出時明確警告）。
+| 項目                                                        | 狀態                                                     |
+| ----------------------------------------------------------- | -------------------------------------------------------- |
+| 核心套件 `svgmotion`                                        | ✅ 完成，150 個測試通過                                  |
+| 網頁 App（Animate + Playground）                            | ✅ 完成，12 個單元測試 + 9 個 e2e 測試通過               |
+| v0.2 功能：path morph／hover／scroll                        | ✅ 完成（剩 Lottie 漸層、dotLottie 輸出未做）            |
+| 文件（README 中英、CONTRIBUTING、SECURITY、CoC、CHANGELOG） | ✅ 完成                                                  |
+| CI（lint / format / typecheck / test / build / e2e）        | ✅ **全綠**                                              |
+| GitHub Pages demo                                           | ⛔ **卡住** — Pages 未啟用                               |
+| 預設分支                                                    | ⚠️ 還是 `claude/codex-oss-project-coq6cn`，應改成 `main` |
+| npm 發佈 `v0.1.0`                                           | ⬜ 未開始（需要 `NPM_TOKEN`）                            |
+| v0.2 roadmap issues                                         | ⬜ 未開始                                                |
+| demo GIF                                                    | ⬜ 未開始                                                |
+| 送出 Codex for OSS 申請                                     | ⬜ 未開始（建議先累積使用量，見下方）                    |
 
-## 待辦事項（Next steps）
+---
 
-### 功能
-- [x] **Path morph**：core preset + CSS/SVG/React/Vue/Lottie 匯出 + Web UI + 測試（2026-09-01 完成，待 commit）
-- [x] **Hover 效果**：以 `trigger: 'hover'` 落地 CSS/SVG/React/Vue（Lottie 明確警告並剔除）（2026-09-01）
-- [x] **Scroll 效果**：以 `trigger: 'scroll'` + `animation-timeline: view()` 落地 CSS/React/Vue（2026-09-01）
-- [ ] （可選）Morph 進階：在瀏覽器實測 `d: path()` 各引擎相容性；Playground 加 morph 範例
+## 下一步（依順序）
 
-### 品質 / 維運
-- [x] 跑一輪 `pnpm test`、`pnpm typecheck` 確認基準線是綠的（2026-09-01：build ✅、tests 123/123 ✅、typecheck ✅；本機 pnpm 需經 `corepack pnpm` 呼叫）
-- [ ] 確認 GitHub Pages 部署與最新 main 同步
-- [ ] 評估三個 .bat 腳本是否要納入文件說明（README 目前未提及）
+### ① 開啟 GitHub Pages ← 唯一的阻塞點
 
-### 文件
-- [x] README 支援表格：Path morph 已標為 ✅（中英與 core README）
-- [ ] README 支援表格隨後續效果落地即時更新（Hover / Scroll）
+`Settings → Pages → Source` 選 **GitHub Actions**（不是 Deploy from a branch）。
 
-## 更新規則
+開啟後重跑 Deploy demo workflow，網址會是
+`https://pinyi333.github.io/SVG-to-Lottie-tool/`
 
-1. 完成任何一項工作後，把上方待辦打勾並在「目前進度」加一行。
-2. 更新頁首的「最後更新」日期。
-3. 新發現的問題或決策，記在本檔對應段落，不要只留在對話裡。
+> Deploy 目前失敗在 `actions/configure-pages@v5` 這一步，這不是設定寫錯——那個 action 就是在向 GitHub 宣告要部署到 Pages，Pages 沒開它必然失敗。**程式面不需要再改任何東西。**
+
+### ② 改預設分支成 `main`
+
+`Settings → General → Default branch` → ⇄ → `main`
+改完 `claude/codex-oss-project-coq6cn` 可以刪除（內容是 `main` 的前段）。
+
+### ③ 發佈到 npm
+
+1. 註冊 npm 帳號 → 建立 **Automation** token
+2. `Settings → Secrets and variables → Actions` 新增 secret：`NPM_TOKEN`
+3. `git tag v0.1.0 && git push origin v0.1.0`
+
+release workflow 會先跑完整測試、確認 tag 與套件版本一致才發佈。套件名 `svgmotion`（已確認未被占用）。
+
+### ④ 開 v0.2 roadmap issues
+
+貼 `good first issue` / `help wanted` 標籤。原本列的五項裡，路徑變形（path morph）、hover 動畫、scroll 動畫都**已經做完了**，剩下 **Lottie 漸層支援**與 **dotLottie 輸出**。
+**這是加分項**——公開 roadmap 是「活躍維護」的訊號。
+
+### ⑤ 錄 demo GIF 放進 README
+
+上傳 SVG → 選線條描繪 → 預覽 → 匯出，5～8 秒即可。
+
+### ⑥ 送申請前先累積使用量
+
+repo 剛開，「使用量」與「生態系重要性」兩項必然是零，這無法用工程品質彌補。
+建議先把 demo 分享到前端／設計社群，**有真實使用者和 star 之後再送件**。
+
+---
+
+## 架構速記
+
+```
+packages/core/     svgmotion 套件 — 解析、preset、匯出器（無 UI 相依）
+apps/web/          React 網頁，是 core 的使用者
+examples/          用 Node 呼叫套件的範例，也是唯一跑到 Node 路徑的地方
+docs/              Lottie 轉換的技術筆記
+```
+
+管線：
+
+```
+SVG 文字 → parseSvg → ParsedSvg → presets → AnimationSpec → toCss/toSvg/toLottie/toReact/toVue
+```
+
+**兩條撐住整個設計的規則：**
+
+1. **幾何只正規化一次** — 解析階段就把所有形狀轉成絕對三次貝茲曲線。Lottie 只認這個，所以在這裡分解弧線，五個匯出器畫出來的形狀才必然一致。
+2. **preset 產出 channel，不產出標記** — channel 是「一個可動畫屬性 + 關鍵影格」。新增效果只要改一個檔案，不用動五個匯出器，匯出器之間也不會對「這個效果是什麼」產生分歧。
+
+新增效果的完整步驟寫在 `CONTRIBUTING.md`。
+
+---
+
+## 驗證指令
+
+```bash
+pnpm install
+pnpm build        # 必須先 build，apps/web 是吃 core 的建置產物
+pnpm lint
+pnpm typecheck
+pnpm test         # core 150 + web 12
+pnpm test:e2e     # Playwright 9 個，跑在正式建置版本上
+```
+
+環境若已有 Chromium：`PLAYWRIGHT_CHROMIUM_PATH=/path/to/chromium pnpm test:e2e`
+
+---
+
+## 已完成的功能（依 git 歷史）
+
+| 功能                | commit    | 重點                                                                                       |
+| ------------------- | --------- | ------------------------------------------------------------------------------------------ |
+| GitHub 操作腳本     | `95fc935` | `github-init.bat`、`github-pull.bat`、`update-github.bat`（README 尚未提及，待評估）        |
+| 路徑變形 path morph | `5e9f3e2` | `morph` preset ＋ `params.toPath`；`parse/morph.ts` 用 de Casteljau 對齊段數；CSS 出 `d: path()`，Lottie 出原生 shape keyframes；子路徑數不符發 `morph-mismatch` 警告 |
+| Hover 觸發          | `c86484d` | `Track.trigger`；CSS 掛在 `.svgm-icon:hover` 下並重列 always-on 動畫；Lottie 剔除並警告      |
+| Scroll 觸發         | `f314555` | `animation-timeline: view()`；混用時逐項配對 timeline；獨立 SVG 匯出對 scroll 另外警告      |
+
+## 踩過的坑（別再踩一次）
+
+**1. 本地全綠 ≠ CI 全綠。** 第一次推上去 CI 三個 job 全紅，其中兩個在本地看不到：
+
+- `typecheck` 失敗：`apps/web` 是透過**建置後**的 `svgmotion` 解析型別，乾淨簽出時 `dist/` 不存在。本地因為留著先前的建置產物而假綠。
+  → **修法**：CI 把 `build` 排在 `typecheck` 之前。驗證任何 CI 問題前先 `rm -rf packages/core/dist apps/web/dist` 重現。
+- `e2e` 失敗：Vite preview 預設綁 `localhost`，在 runner 上先解析成 IPv6 `::1`，Playwright 卻輪詢 IPv4 `127.0.0.1`。
+  → **修法**：`--host 127.0.0.1` 明確綁定。
+
+**2. 錯誤訊息被吞掉會讓人診斷錯方向。** e2e 第一次只吐一句 `Timed out waiting for webServer`，因此第一輪誤判成「冷啟動建置太慢」，白修一次。
+→ 已加上 `stdout: 'pipe'` / `stderr: 'pipe'`。**訊息不足本身就是要修的缺陷**，不要繞過它猜。
+
+**3. `pathToCurve` 的退化封閉線段。** 路徑若在 `Z` 之前就已回到起點，轉換仍會為 `Z` 產生一段零長度曲線；留著會重複一個頂點並產生 `[0,0]` 切線——**每個圓形和橢圓都會中**。已在 `parse/geometry.ts` 處理。
+
+**4. 圓形不要用通用弧線轉換。** 通用轉換以 120° 分割，半徑誤差約 0.15%；改用精確的四分之一圓建構（常數 `4/3 × (√2 − 1)`）可降到 0.005% 以下。圖示裡圓形和橢圓最常見，值得特例處理。
+
+**5. 同一個問題不要警告兩次。** 曾經 preset 驗證器和 Lottie 匯出器各報一次「這個形狀沒有 stroke」，措辭不同，看起來像兩個問題。已移除重複。
+
+---
+
+## 這份文件的更新規則
+
+**每次做完下列任何一件事，就更新這份文件並一起 commit：**
+
+- 完成或推進「下一步」清單裡的任何一項 → 更新狀態表與清單
+- CI / 部署狀態改變 → 更新「目前狀態總覽」
+- 踩到新的坑並修好 → 加進「踩過的坑」，寫清楚**症狀 → 原因 → 修法**
+- 架構有實質變動 → 更新「架構速記」
+
+更新時**一定要改開頭的「最後更新」日期**，並把 commit 指向**最後一次改變專案狀態的 commit**
+（不是這份文件自己的 commit——那個值在 amend 之後就會失效）。
+
+寫的時候記住：讀者是三個月後的你，或是一個完全沒有上下文的人。
+**寫下當下的真實狀態，不要寫成希望的狀態**——卡住的事情要明白寫出卡在哪裡。
