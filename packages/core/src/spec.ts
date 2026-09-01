@@ -14,6 +14,7 @@ export interface TrackOptions {
   easing?: Track['easing'];
   loop?: Track['loop'];
   params?: Track['params'];
+  trigger?: Track['trigger'];
 }
 
 const DEFAULT_FPS = 60;
@@ -43,6 +44,7 @@ export function createTrack(
     easing: options.easing ?? { ...DEFAULT_EASING },
     loop: options.loop ?? { mode: 'none' },
     params: options.params ?? {},
+    trigger: options.trigger ?? 'auto',
   };
 }
 

@@ -97,6 +97,15 @@ export type PresetName = 'strokeDraw' | 'fade' | 'scale' | 'rotate' | 'bounce' |
 
 export type LoopMode = 'none' | 'loop' | 'pingpong';
 
+/**
+ * What starts a track playing.
+ *
+ * `auto` plays as soon as the animation loads. `hover` plays while the pointer
+ * is over the icon — expressible in CSS (and the SVG, React and Vue outputs
+ * built on it), but never in Lottie, which has no model for input events.
+ */
+export type TrackTrigger = 'auto' | 'hover';
+
 export interface Loop {
   mode: LoopMode;
   /** Repeat count. `undefined` means infinite. Ignored when mode is 'none'. */
@@ -126,6 +135,8 @@ export interface Track {
   easing: Easing;
   loop: Loop;
   params: PresetParams;
+  /** What starts the track. Missing means `auto`, so old specs stay valid. */
+  trigger?: TrackTrigger;
 }
 
 /**

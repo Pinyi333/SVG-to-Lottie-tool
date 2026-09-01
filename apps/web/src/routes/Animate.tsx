@@ -16,6 +16,7 @@ import {
   type LoopMode,
   type PresetName,
   type Track,
+  type TrackTrigger,
 } from 'svgmotion';
 import { Dropzone } from '../components/Dropzone.js';
 import { PreviewPane, type PreviewBackground } from '../components/PreviewPane.js';
@@ -34,6 +35,7 @@ interface Settings {
   stagger: number;
   easingName: EasingName;
   loop: LoopMode;
+  trigger: TrackTrigger;
   degrees: number;
   height: number;
   reverse: boolean;
@@ -47,6 +49,7 @@ const DEFAULT_SETTINGS: Settings = {
   stagger: 0.12,
   easingName: 'easeInOut',
   loop: 'none',
+  trigger: 'auto',
   degrees: 360,
   height: 8,
   reverse: false,
@@ -105,6 +108,7 @@ export function Animate({ onSendToPlayground }: { onSendToPlayground: (data: unk
         delay: settings.delay + index * settings.stagger,
         easing: easing(settings.easingName),
         loop: { mode: settings.loop },
+        trigger: settings.trigger,
         params: paramsFor(settings),
       }),
     );
@@ -335,6 +339,17 @@ export function Animate({ onSendToPlayground }: { onSendToPlayground: (data: unk
                   { value: 'none' as const, label: t.animation.none },
                   { value: 'loop' as const, label: t.animation.loopForever },
                   { value: 'pingpong' as const, label: t.animation.pingpong },
+                ]}
+              />
+            </Field>
+
+            <Field label={t.animation.trigger}>
+              <Select
+                value={settings.trigger}
+                onChange={(value) => update('trigger', value)}
+                options={[
+                  { value: 'auto' as const, label: t.animation.triggerAuto },
+                  { value: 'hover' as const, label: t.animation.triggerHover },
                 ]}
               />
             </Field>

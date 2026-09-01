@@ -307,8 +307,26 @@ function sampleEasing(
  * fastest way to lose trust in an export.
  */
 export function toLottie(spec: AnimationSpec, options: LottieOptions = {}): LottieOutput {
-  const resolved = resolveSpec(spec);
+  // Lottie has no model for input events, so hover tracks cannot exist in the
+  // file at all — baking them in as autoplay would misrepresent the animation.
+  // They are dropped before resolution so they cannot stretch the timeline.
+  const hoverCount = spec.tracks.filter((track) => track.trigger === 'hover').length;
+  const playable: AnimationSpec =
+    hoverCount === 0
+      ? spec
+      : { ...spec, tracks: spec.tracks.filter((track) => track.trigger !== 'hover') };
+
+  const resolved = resolveSpec(playable);
   const warnings: Warning[] = [...spec.source.warnings, ...resolved.warnings];
+
+  if (hoverCount > 0) {
+    warnings.push({
+      code: 'lottie-unsupported',
+      message:
+        `${hoverCount} hover-triggered animation(s) were left out: Lottie has no concept of ` +
+        'input events. Use the CSS or SVG export for hover effects.',
+    });
+  }
 
   for (const gap of LOTTIE_GAPS) {
     if (gap.test(spec)) warnings.push({ code: 'lottie-unsupported', message: gap.message });
@@ -346,5 +364,5 @@ export function toLottie(spec: AnimationSpec, options: LottieOptions = {}): Lott
     markers: [],
   };
 
-  return { animation, warnings, loop: loopsForever(spec) };
+  return { animation, warnings, loop: loopsForever(playable) };
 }

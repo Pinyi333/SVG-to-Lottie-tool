@@ -40,6 +40,9 @@ export const en = {
     to: 'To',
     height: 'Hop height',
     reverse: 'Draw from the far end',
+    trigger: 'Play on',
+    triggerAuto: 'Load',
+    triggerHover: 'Hover',
     morphTarget: 'Morph into (path data)',
     morphTargetHint:
       'Paste the `d` of the path to morph into, drawn in the same viewBox. ' +

@@ -14,6 +14,11 @@ All notable changes to this project are documented here. The format follows
   Mismatched segment counts are aligned by subdividing curves; mismatched
   subpath counts are reported as a `morph-mismatch` warning instead of guessed
   at.
+- Hover trigger: any track can set `trigger: 'hover'` to play while the
+  pointer is over the icon. CSS (and the SVG, React and Vue outputs) express
+  it with a `:hover` rule on a root class; the Lottie export drops such tracks
+  with a warning, since the format has no model for input events. The Animate
+  workspace gained a "Play on" control for it.
 
 ## [0.1.0] - 2026-09-01
 

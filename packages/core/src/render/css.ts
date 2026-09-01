@@ -224,6 +224,7 @@ export function toCss(spec: AnimationSpec, options: CssOptions = {}): CssOutput 
     if (tracks.length === 0) continue;
 
     const animations: string[] = [];
+    const hoverAnimations: string[] = [];
     const shared: string[] = [];
     let usesDash = false;
 
@@ -251,10 +252,11 @@ export function toCss(spec: AnimationSpec, options: CssOptions = {}): CssOutput 
       const iterations = Number.isFinite(count) ? String(count) : 'infinite';
       const direction = track.loop.mode === 'pingpong' ? ' alternate' : '';
       const fill = track.loop.mode === 'none' ? ' both' : '';
-      animations.push(
+      const shorthand =
         `${name} ${round(track.duration, 3)}s ${fallbackEasing} ${round(track.delay, 3)}s ` +
-          `${iterations}${direction}${fill}`.trimEnd(),
-      );
+        `${iterations}${direction}${fill}`.trimEnd();
+      if (track.trigger === 'hover') hoverAnimations.push(shorthand);
+      else animations.push(shorthand);
 
       if (channels.some((c) => c.name === 'trimStart' || c.name === 'trimEnd')) usesDash = true;
       if (channels.some((c) => isTransformChannel(c.name))) {
@@ -266,7 +268,7 @@ export function toCss(spec: AnimationSpec, options: CssOptions = {}): CssOutput 
       }
     });
 
-    if (animations.length === 0) continue;
+    if (animations.length === 0 && hoverAnimations.length === 0) continue;
 
     if (usesDash) {
       // A dash as long as the outline leaves exactly one gap to slide.
@@ -274,14 +276,26 @@ export function toCss(spec: AnimationSpec, options: CssOptions = {}): CssOutput 
     }
 
     const unique = [...new Set(shared)];
-    const body = [...unique, `animation: ${animations.join(', ')};`];
-    rules.push(`.${className} {\n  ${body.join('\n  ')}\n}`);
+    const body = [...unique];
+    if (animations.length > 0) body.push(`animation: ${animations.join(', ')};`);
+    if (body.length > 0) rules.push(`.${className} {\n  ${body.join('\n  ')}\n}`);
+
+    if (hoverAnimations.length > 0) {
+      // The hover rule re-lists the always-on animations: `animation` is one
+      // property, so a hover-only value would silently cancel them instead.
+      const combined = [...animations, ...hoverAnimations].join(', ');
+      rules.push(`.${prefix}-icon:hover .${className} {\n  animation: ${combined};\n}`);
+    }
   }
 
   const css = [...rules, ...keyframeBlocks].join('\n\n');
   const { viewBox } = spec.source;
+  // Hovering anywhere on the icon should trigger every hover track at once,
+  // so the hover selector hangs off a class on the root rather than the shape.
+  const hasHover = resolved.tracks.some((track) => track.track.trigger === 'hover');
+  const rootClass = hasHover ? `class="${prefix}-icon" ` : '';
   const html =
-    `<svg xmlns="http://www.w3.org/2000/svg" ` +
+    `<svg ${rootClass}xmlns="http://www.w3.org/2000/svg" ` +
     `viewBox="${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}" ` +
     `width="${spec.source.width}" height="${spec.source.height}">\n` +
     `${markup.join('\n')}\n</svg>`;

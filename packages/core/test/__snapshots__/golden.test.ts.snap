@@ -668,7 +668,22 @@ exports[`fade output stays stable > renders the same standalone SVG 1`] = `
 </svg>"
 `;
 
-exports[`morph output stays stable > renders the same CSS 1`] = `""`;
+exports[`morph output stays stable > renders the same CSS 1`] = `
+".svgm-tick {
+  animation: svgm-tick-morph 1s cubic-bezier(0.42, 0, 0.58, 1) 0.25s 1 both;
+}
+
+@keyframes svgm-tick-morph {
+  0% {
+    d: path("M20 6C16.333 9.667 12.667 13.333 9 17C7.333 15.333 5.667 13.667 4 12");
+    animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  }
+  100% {
+    d: path("M4 4C6.667 6.667 9.333 9.333 12 12C14.667 14.667 17.333 17.333 20 20");
+    animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  }
+}"
+`;
 
 exports[`morph output stays stable > renders the same Lottie JSON 1`] = `
 {
@@ -727,52 +742,191 @@ exports[`morph output stays stable > renders the same Lottie JSON 1`] = `
             {
               "ind": 0,
               "ks": {
-                "a": 0,
-                "k": {
-                  "c": false,
-                  "i": [
-                    [
-                      0,
-                      0,
+                "a": 1,
+                "k": [
+                  {
+                    "i": {
+                      "x": [
+                        0.58,
+                      ],
+                      "y": [
+                        1,
+                      ],
+                    },
+                    "o": {
+                      "x": [
+                        0.42,
+                      ],
+                      "y": [
+                        0,
+                      ],
+                    },
+                    "s": [
+                      {
+                        "c": false,
+                        "i": [
+                          [
+                            0,
+                            0,
+                          ],
+                          [
+                            3.6667,
+                            -3.6667,
+                          ],
+                          [
+                            1.6667,
+                            1.6667,
+                          ],
+                        ],
+                        "o": [
+                          [
+                            -3.6667,
+                            3.6667,
+                          ],
+                          [
+                            -1.6667,
+                            -1.6667,
+                          ],
+                          [
+                            0,
+                            0,
+                          ],
+                        ],
+                        "v": [
+                          [
+                            8,
+                            -5.5,
+                          ],
+                          [
+                            -3,
+                            5.5,
+                          ],
+                          [
+                            -8,
+                            0.5,
+                          ],
+                        ],
+                      },
                     ],
-                    [
-                      3.6667,
-                      -3.6667,
+                    "t": 0,
+                  },
+                  {
+                    "i": {
+                      "x": [
+                        0.58,
+                      ],
+                      "y": [
+                        1,
+                      ],
+                    },
+                    "o": {
+                      "x": [
+                        0.42,
+                      ],
+                      "y": [
+                        0,
+                      ],
+                    },
+                    "s": [
+                      {
+                        "c": false,
+                        "i": [
+                          [
+                            0,
+                            0,
+                          ],
+                          [
+                            3.6667,
+                            -3.6667,
+                          ],
+                          [
+                            1.6667,
+                            1.6667,
+                          ],
+                        ],
+                        "o": [
+                          [
+                            -3.6667,
+                            3.6667,
+                          ],
+                          [
+                            -1.6667,
+                            -1.6667,
+                          ],
+                          [
+                            0,
+                            0,
+                          ],
+                        ],
+                        "v": [
+                          [
+                            8,
+                            -5.5,
+                          ],
+                          [
+                            -3,
+                            5.5,
+                          ],
+                          [
+                            -8,
+                            0.5,
+                          ],
+                        ],
+                      },
                     ],
-                    [
-                      1.6667,
-                      1.6667,
+                    "t": 7.5,
+                  },
+                  {
+                    "s": [
+                      {
+                        "c": false,
+                        "i": [
+                          [
+                            0,
+                            0,
+                          ],
+                          [
+                            -2.6667,
+                            -2.6667,
+                          ],
+                          [
+                            -2.6667,
+                            -2.6667,
+                          ],
+                        ],
+                        "o": [
+                          [
+                            2.6667,
+                            2.6667,
+                          ],
+                          [
+                            2.6667,
+                            2.6667,
+                          ],
+                          [
+                            0,
+                            0,
+                          ],
+                        ],
+                        "v": [
+                          [
+                            -8,
+                            -7.5,
+                          ],
+                          [
+                            0,
+                            0.5,
+                          ],
+                          [
+                            8,
+                            8.5,
+                          ],
+                        ],
+                      },
                     ],
-                  ],
-                  "o": [
-                    [
-                      -3.6667,
-                      3.6667,
-                    ],
-                    [
-                      -1.6667,
-                      -1.6667,
-                    ],
-                    [
-                      0,
-                      0,
-                    ],
-                  ],
-                  "v": [
-                    [
-                      8,
-                      -5.5,
-                    ],
-                    [
-                      -3,
-                      5.5,
-                    ],
-                    [
-                      -8,
-                      0.5,
-                    ],
-                  ],
-                },
+                    "t": 37.5,
+                  },
+                ],
               },
               "nm": "Path 1",
               "ty": "sh",
@@ -861,7 +1015,20 @@ exports[`morph output stays stable > renders the same Lottie JSON 1`] = `
 exports[`morph output stays stable > renders the same standalone SVG 1`] = `
 "<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
   <style>
+    .svgm-tick {
+      animation: svgm-tick-morph 1s cubic-bezier(0.42, 0, 0.58, 1) 0.25s 1 both;
+    }
 
+    @keyframes svgm-tick-morph {
+      0% {
+        d: path("M20 6C16.333 9.667 12.667 13.333 9 17C7.333 15.333 5.667 13.667 4 12");
+        animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+      }
+      100% {
+        d: path("M4 4C6.667 6.667 9.333 9.333 12 12C14.667 14.667 17.333 17.333 20 20");
+        animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+      }
+    }
   </style>
   <path class="svgm-tick" d="M20 6C16.333 9.667 12.667 13.333 9 17C7.333 15.333 5.667 13.667 4 12" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
 </svg>"
