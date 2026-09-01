@@ -30,11 +30,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    // The app imports svgmotion from its built output, so the whole
-    // workspace is built here; pnpm orders that topologically.
-    command: 'pnpm --workspace-root build && pnpm preview --port 4173 --strictPort',
+    // Serves the existing build rather than making one. The root `test:e2e`
+    // script builds first, and CI has its own build step; building again here
+    // doubled the work and blew past this timeout on a cold runner.
+    command: 'pnpm preview --port 4173 --strictPort',
     url: 'http://127.0.0.1:4173/SVG-to-Lottie-tool/',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 60_000,
   },
 });

@@ -32,17 +32,20 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Lint and formatting need nothing built, so they run first for fast
+      # feedback on trivial problems.
       - run: pnpm lint
 
       - run: pnpm format:check
 
+      # The app imports svgmotion from its built output rather than its source,
+      # so the package has to exist before anything typechecks against it.
+      # This step also proves the published entry points actually resolve.
+      - run: pnpm build
+
       - run: pnpm typecheck
 
       - run: pnpm test
-
-      # The web app imports svgmotion from its built output, so this also
-      # proves the published package's entry points resolve.
-      - run: pnpm build
 
   e2e:
     name: End-to-end
@@ -62,7 +65,12 @@ jobs:
 
       - run: pnpm --filter web exec playwright install --with-deps chromium
 
-      - run: pnpm test:e2e
+      # Building here rather than inside Playwright's webServer: a cold build
+      # of both packages does not reliably finish inside the server's start
+      # timeout, and the failure surfaces as an unhelpful timeout message.
+      - run: pnpm build
+
+      - run: pnpm --filter web test:e2e
 
       - uses: actions/upload-artifact@v4
         if: failure()
