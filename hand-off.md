@@ -31,11 +31,12 @@
 | 網頁 App（Animate + Playground）                            | ✅ 完成，17 個單元測試 + 11 個 e2e 測試通過              |
 | v0.2 功能（morph／hover／scroll／漸層／dotLottie）          | ✅ 五項全部完成                                          |
 | 文件（README 中英、CONTRIBUTING、SECURITY、CoC、CHANGELOG） | ✅ 完成                                                  |
-| CI（lint / format / typecheck / test / build / e2e）        | ✅ **全綠**                                              |
+| CI（lint / format / typecheck / test / build / e2e）        | ✅ **全綠**（PR #1 上 Node 20／22 都過）                 |
+| PR #1（morph／hover／scroll／漸層／dotLottie）              | 🟢 已開，CI 綠，等待你 review 與合併                     |
 | GitHub Pages demo                                           | ⛔ **卡住** — Pages 未啟用                               |
 | 預設分支                                                    | ⚠️ 還是 `claude/codex-oss-project-coq6cn`，應改成 `main` |
 | npm 發佈 `v0.1.0`                                           | ⬜ 未開始（需要 `NPM_TOKEN`）                            |
-| v0.2 roadmap issues                                         | ⬜ 未開始                                                |
+| v0.2 roadmap issues                                         | ✅ 已開 #2〜#6                                           |
 | demo GIF                                                    | ⬜ 未開始                                                |
 | 送出 Codex for OSS 申請                                     | ⬜ 未開始（建議先累積使用量，見下方）                    |
 
@@ -65,9 +66,19 @@
 
 release workflow 會先跑完整測試、確認 tag 與套件版本一致才發佈。套件名 `svgmotion`（已確認未被占用）。
 
-### ④ 開 v0.2 roadmap issues
+### ④ 開 v0.2 roadmap issues ✅ 已完成
 
-貼 `good first issue` / `help wanted` 標籤。原本列的五項**全部做完了**，Playground 讀 `.lottie` 也順手做掉了，所以要開的是新的一批。候選：Lottie 匯出的 `spreadMethod` 近似改善、`<use>` 展平、dotLottie 多動畫封裝、`<style>` 區塊的 CSS 套用、Firefox／Safari 的 morph 實機驗證（見下）。
+原訂的五項功能全部做完，所以開的是新的一批（2026-09-01）：
+
+| #                                                              | 主題                                  | 標籤                                        |
+| -------------------------------------------------------------- | ------------------------------------- | ------------------------------------------- |
+| [#2](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/2) | 套用 `<style>` 區塊而不是只發警告      | enhancement · good first issue · help wanted |
+| [#3](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/3) | 解析階段展平 `<use>` 參照              | enhancement · help wanted                    |
+| [#4](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/4) | Lottie 匯出近似 `reflect`／`repeat`    | enhancement · help wanted                    |
+| [#5](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/5) | 一個 `.lottie` 封存多支動畫            | enhancement · help wanted                    |
+| [#6](https://github.com/Pinyi333/SVG-to-Lottie-tool/issues/6) | 在 Firefox／Safari 實測 morph          | good first issue · help wanted                |
+
+每一則都寫了「從哪個檔案下手」，#6 甚至不需要架環境——開瀏覽器看完回報就是完整貢獻。
 **這是加分項**——公開 roadmap 是「活躍維護」的訊號。
 
 ### ⑤ 錄 demo GIF 放進 README
