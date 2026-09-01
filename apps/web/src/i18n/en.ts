@@ -43,6 +43,7 @@ export const en = {
     trigger: 'Play on',
     triggerAuto: 'Load',
     triggerHover: 'Hover',
+    triggerScroll: 'Scroll',
     morphTarget: 'Morph into (path data)',
     morphTargetHint:
       'Paste the `d` of the path to morph into, drawn in the same viewBox. ' +

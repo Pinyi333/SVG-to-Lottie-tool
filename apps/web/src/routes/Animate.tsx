@@ -350,6 +350,7 @@ export function Animate({ onSendToPlayground }: { onSendToPlayground: (data: unk
                 options={[
                   { value: 'auto' as const, label: t.animation.triggerAuto },
                   { value: 'hover' as const, label: t.animation.triggerHover },
+                  { value: 'scroll' as const, label: t.animation.triggerScroll },
                 ]}
               />
             </Field>

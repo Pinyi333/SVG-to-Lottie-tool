@@ -19,6 +19,11 @@ All notable changes to this project are documented here. The format follows
   it with a `:hover` rule on a root class; the Lottie export drops such tracks
   with a warning, since the format has no model for input events. The Animate
   workspace gained a "Play on" control for it.
+- Scroll trigger: `trigger: 'scroll'` scrubs a track as the icon crosses the
+  viewport, via CSS scroll-driven animations (`animation-timeline: view()`).
+  Browsers without the feature autoplay it instead; the Lottie export drops
+  such tracks with a warning, and the standalone SVG export warns that an
+  image embed has no scroller.
 
 ## [0.1.0] - 2026-09-01
 

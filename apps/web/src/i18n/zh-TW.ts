@@ -45,6 +45,7 @@ export const zhTW: Dictionary = {
     trigger: '播放時機',
     triggerAuto: '載入時',
     triggerHover: '滑鼠懸停時',
+    triggerScroll: '捲動時',
     morphTarget: '變形目標（路徑資料）',
     morphTargetHint: '貼上要變形成的路徑 `d` 值，座標需在同一個 viewBox 內，子路徑數量必須和原形狀相同。',
   },

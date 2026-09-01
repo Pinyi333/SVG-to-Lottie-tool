@@ -1,7 +1,7 @@
 # Hand-off 交接文件
 
 > 本檔案用於記錄專案即時進度與待辦事項。**有新進度請隨時更新此檔。**
-> 最後更新：2026-09-01（Path morph、Hover 觸發已完成）
+> 最後更新：2026-09-01（Path morph、Hover、Scroll 觸發已完成）
 
 ## 專案是什麼
 
@@ -42,12 +42,17 @@
   - 文件：README（中英）、packages/core/README、CHANGELOG（Unreleased）已更新
 
 - ✅ `5e9f3e2` **Path morph 已 commit**（含 golden 快照修正：morph 有給 `toPath` 的合理基準）
-- 🔄 **Hover 觸發實作完成，驗證中／待 commit**（2026-09-01）：
+- ✅ `c86484d` **Hover 觸發已 commit**（2026-09-01，全套 146/146 測試通過）：
   - core：`Track.trigger?: 'auto' | 'hover'`（新型別 `TrackTrigger`，預設 auto，舊 spec 相容）
   - CSS：hover tracks 的 animation 掛在 `.svgm-icon:hover .svgm-<id>` 規則下；有 hover 時根 `<svg>` 加 `svgm-icon` class；hover 規則會重列 always-on 動畫避免 `animation` 覆蓋
   - Lottie：hover tracks 在 resolve 前被剔除並發 `lottie-unsupported` 警告（不影響時間軸與 loop 判定）
   - Web UI：Animate 面板新增「播放時機」選單（載入時／滑鼠懸停時），中英 i18n
   - 測試：新增 `packages/core/test/hover.test.ts` 6 個測試
+- 🔄 **Scroll 觸發實作完成，驗證中／待 commit**（2026-09-01）：
+  - core：`TrackTrigger` 擴充為 `'auto' | 'hover' | 'scroll'`
+  - CSS：scroll tracks 用 `animation-timeline: view()` 隨捲動推進；混用時逐項配對 timeline（`auto, view()`）；不支援的瀏覽器自動退回直接播放
+  - Lottie：hover/scroll 一併剔除＋警告；獨立 SVG 匯出對 scroll 發 `trigger-unsupported` 警告（`<img>` 內無捲動上下文）
+  - Web UI：「播放時機」加入「捲動時」選項
 
 ## 效果 × 匯出格式支援現況
 
@@ -63,7 +68,7 @@ Stroke draw / Fade / Scale / Rotate / Bounce / Loop / **Path morph** 在五種�
 ### 功能
 - [x] **Path morph**：core preset + CSS/SVG/React/Vue/Lottie 匯出 + Web UI + 測試（2026-09-01 完成，待 commit）
 - [x] **Hover 效果**：以 `trigger: 'hover'` 落地 CSS/SVG/React/Vue（Lottie 明確警告並剔除）（2026-09-01）
-- [ ] **Scroll 效果**：補 CSS、React、Vue 匯出
+- [x] **Scroll 效果**：以 `trigger: 'scroll'` + `animation-timeline: view()` 落地 CSS/React/Vue（2026-09-01）
 - [ ] （可選）Morph 進階：在瀏覽器實測 `d: path()` 各引擎相容性；Playground 加 morph 範例
 
 ### 品質 / 維運

@@ -84,7 +84,8 @@ export type WarningCode =
   | 'missing-viewbox'
   | 'lottie-unsupported'
   | 'empty-document'
-  | 'morph-mismatch';
+  | 'morph-mismatch'
+  | 'trigger-unsupported';
 
 export interface Warning {
   code: WarningCode;
@@ -101,10 +102,13 @@ export type LoopMode = 'none' | 'loop' | 'pingpong';
  * What starts a track playing.
  *
  * `auto` plays as soon as the animation loads. `hover` plays while the pointer
- * is over the icon — expressible in CSS (and the SVG, React and Vue outputs
- * built on it), but never in Lottie, which has no model for input events.
+ * is over the icon. `scroll` scrubs the animation as the icon moves through
+ * the viewport, via CSS scroll-driven animations (`animation-timeline:
+ * view()`); browsers without that feature simply autoplay it. Both are
+ * expressible in CSS (and the React and Vue outputs built on it), but never
+ * in Lottie, which has no model for input events.
  */
-export type TrackTrigger = 'auto' | 'hover';
+export type TrackTrigger = 'auto' | 'hover' | 'scroll';
 
 export interface Loop {
   mode: LoopMode;

@@ -76,7 +76,7 @@ only. Saying so plainly beats exporting a file that silently does nothing.
 | Loop / ping-pong | ✅                                                          | ✅          | ✅                 | ✅      | ✅      |
 | Path morph       | ✅ `d: path()`                                              | ✅          | ✅ shape keyframes | ✅      | ✅      |
 | Hover            | ✅ `:hover` rule                                            | ✅          | ❌ not expressible | ✅      | ✅      |
-| Scroll           | planned                                                     | ❌          | ❌ not expressible | planned | planned |
+| Scroll           | ✅ `view()` timeline                                        | ❌          | ❌ not expressible | ✅      | ✅      |
 
 ## What of an SVG survives the trip
 

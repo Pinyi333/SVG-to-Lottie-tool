@@ -19,6 +19,20 @@ export interface SvgOptions extends CssOptions {
  */
 export function toSvg(spec: AnimationSpec, options: SvgOptions = {}): CssOutput {
   const rendered = toCss(spec, options);
+
+  // The stylesheet carries the `view()` timeline anyway — pasted inline into a
+  // scrolling page it works — but the common uses of a standalone file
+  // (`<img>`, `<object>`) isolate it from any scroller, so say so up front.
+  const scrollCount = spec.tracks.filter((track) => track.trigger === 'scroll').length;
+  if (scrollCount > 0) {
+    rendered.warnings.push({
+      code: 'trigger-unsupported',
+      message:
+        `${scrollCount} scroll-triggered animation(s) only scrub when this SVG is pasted ` +
+        'inline into a scrolling page. Used as an image it has no scroller, so they will ' +
+        'simply autoplay.',
+    });
+  }
   const indentedCss = rendered.css
     .split('\n')
     .map((line) => (line.trim() === '' ? '' : `    ${line}`))

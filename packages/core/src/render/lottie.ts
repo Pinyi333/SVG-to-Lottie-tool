@@ -307,24 +307,27 @@ function sampleEasing(
  * fastest way to lose trust in an export.
  */
 export function toLottie(spec: AnimationSpec, options: LottieOptions = {}): LottieOutput {
-  // Lottie has no model for input events, so hover tracks cannot exist in the
-  // file at all — baking them in as autoplay would misrepresent the animation.
-  // They are dropped before resolution so they cannot stretch the timeline.
-  const hoverCount = spec.tracks.filter((track) => track.trigger === 'hover').length;
+  // Lottie has no model for input events, so hover and scroll tracks cannot
+  // exist in the file at all — baking them in as autoplay would misrepresent
+  // the animation. They are dropped before resolution so they cannot stretch
+  // the timeline.
+  const isInteractive = (trigger: AnimationSpec['tracks'][number]['trigger']) =>
+    trigger === 'hover' || trigger === 'scroll';
+  const interactiveCount = spec.tracks.filter((track) => isInteractive(track.trigger)).length;
   const playable: AnimationSpec =
-    hoverCount === 0
+    interactiveCount === 0
       ? spec
-      : { ...spec, tracks: spec.tracks.filter((track) => track.trigger !== 'hover') };
+      : { ...spec, tracks: spec.tracks.filter((track) => !isInteractive(track.trigger)) };
 
   const resolved = resolveSpec(playable);
   const warnings: Warning[] = [...spec.source.warnings, ...resolved.warnings];
 
-  if (hoverCount > 0) {
+  if (interactiveCount > 0) {
     warnings.push({
       code: 'lottie-unsupported',
       message:
-        `${hoverCount} hover-triggered animation(s) were left out: Lottie has no concept of ` +
-        'input events. Use the CSS or SVG export for hover effects.',
+        `${interactiveCount} hover- or scroll-triggered animation(s) were left out: Lottie ` +
+        'has no concept of input events. Use the CSS export for those effects.',
     });
   }
 

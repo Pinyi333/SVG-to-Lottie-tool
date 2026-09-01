@@ -224,6 +224,7 @@ export function toCss(spec: AnimationSpec, options: CssOptions = {}): CssOutput 
     if (tracks.length === 0) continue;
 
     const animations: string[] = [];
+    const scrollAnimations: string[] = [];
     const hoverAnimations: string[] = [];
     const shared: string[] = [];
     let usesDash = false;
@@ -256,6 +257,7 @@ export function toCss(spec: AnimationSpec, options: CssOptions = {}): CssOutput 
         `${name} ${round(track.duration, 3)}s ${fallbackEasing} ${round(track.delay, 3)}s ` +
         `${iterations}${direction}${fill}`.trimEnd();
       if (track.trigger === 'hover') hoverAnimations.push(shorthand);
+      else if (track.trigger === 'scroll') scrollAnimations.push(shorthand);
       else animations.push(shorthand);
 
       if (channels.some((c) => c.name === 'trimStart' || c.name === 'trimEnd')) usesDash = true;
@@ -268,23 +270,52 @@ export function toCss(spec: AnimationSpec, options: CssOptions = {}): CssOutput 
       }
     });
 
-    if (animations.length === 0 && hoverAnimations.length === 0) continue;
+    if (animations.length === 0 && scrollAnimations.length === 0 && hoverAnimations.length === 0) {
+      continue;
+    }
 
     if (usesDash) {
       // A dash as long as the outline leaves exactly one gap to slide.
       shared.push(`stroke-dasharray: ${round(node.length, 3)};`);
     }
 
+    // `animation-timeline` is a coordinated list: one entry per animation, in
+    // the same order. `view()` scrubs the animation as the icon crosses the
+    // viewport; browsers without scroll-driven animations ignore the property
+    // and simply autoplay, which is the least surprising fallback.
+    const timelineList = (auto: number, scroll: number, trailing = 0) =>
+      [
+        ...Array<string>(auto).fill('auto'),
+        ...Array<string>(scroll).fill('view()'),
+        ...Array<string>(trailing).fill('auto'),
+      ].join(', ');
+
     const unique = [...new Set(shared)];
     const body = [...unique];
-    if (animations.length > 0) body.push(`animation: ${animations.join(', ')};`);
+    const base = [...animations, ...scrollAnimations];
+    if (base.length > 0) {
+      body.push(`animation: ${base.join(', ')};`);
+      if (scrollAnimations.length > 0) {
+        body.push(`animation-timeline: ${timelineList(animations.length, scrollAnimations.length)};`);
+      }
+    }
     if (body.length > 0) rules.push(`.${className} {\n  ${body.join('\n  ')}\n}`);
 
     if (hoverAnimations.length > 0) {
-      // The hover rule re-lists the always-on animations: `animation` is one
+      // The hover rule re-lists the other animations: `animation` is one
       // property, so a hover-only value would silently cancel them instead.
-      const combined = [...animations, ...hoverAnimations].join(', ');
-      rules.push(`.${prefix}-icon:hover .${className} {\n  animation: ${combined};\n}`);
+      const combined = [...animations, ...scrollAnimations, ...hoverAnimations].join(', ');
+      const hoverBody = [`animation: ${combined};`];
+      if (scrollAnimations.length > 0) {
+        hoverBody.push(
+          `animation-timeline: ${timelineList(
+            animations.length,
+            scrollAnimations.length,
+            hoverAnimations.length,
+          )};`,
+        );
+      }
+      rules.push(`.${prefix}-icon:hover .${className} {\n  ${hoverBody.join('\n  ')}\n}`);
     }
   }
 
