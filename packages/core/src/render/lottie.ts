@@ -151,15 +151,10 @@ function buildLayer(
 
   const hasTrim = merged.has('trimStart') || merged.has('trimEnd');
   if (hasTrim) {
-    if (!stroke) {
-      warnings.push({
-        code: 'lottie-unsupported',
-        subject: node.id,
-        message:
-          `"${node.id}" has no stroke, so its stroke-draw animation produces nothing visible ` +
-          'in the Lottie file.',
-      });
-    }
+    // A missing stroke is not reported here: the stroke-draw preset already
+    // validates it, and saying the same thing twice in different words reads
+    // like two separate problems.
+
     // Trim must follow the stroke it modifies, so it is appended last.
     items.push(
       trimItem(
