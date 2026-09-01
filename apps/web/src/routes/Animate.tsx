@@ -7,6 +7,7 @@ import {
   easing,
   parseSvg,
   toCss,
+  toDotLottie,
   toLottie,
   toReact,
   toSvg,
@@ -24,6 +25,7 @@ import { CodeBlock } from '../components/CodeBlock.js';
 import { WarningList } from '../components/WarningList.js';
 import { Button, Field, Panel, Select, Slider, Tabs, Toggle } from '../components/ui.js';
 import { useI18n } from '../i18n/index.js';
+import { downloadBytes } from '../lib/download.js';
 import { SAMPLES } from '../lib/samples.js';
 
 type ExportFormat = 'lottie' | 'css' | 'svg' | 'react' | 'vue';
@@ -123,11 +125,14 @@ export function Animate({ onSendToPlayground }: { onSendToPlayground: (data: unk
   const outputs = useMemo(() => {
     if (!spec) return null;
     const lottie = toLottie(spec, { name: componentName });
+    // The archive wraps the same animation, so it costs one more zip of work
+    // and nothing else; building it here keeps the download instant.
+    const dotLottie = toDotLottie(spec, { name: componentName });
     const css = toCss(spec);
     const svg = toSvg(spec, { respectReducedMotion: true });
     const react = toReact(spec, { name: componentName });
     const vue = toVue(spec, { name: componentName });
-    return { lottie, css, svg, react, vue };
+    return { lottie, dotLottie, css, svg, react, vue };
   }, [spec, componentName]);
 
   const warnings = useMemo(() => {
@@ -226,12 +231,25 @@ export function Animate({ onSendToPlayground }: { onSendToPlayground: (data: unk
               mime={exportView.mime}
               actions={
                 format === 'lottie' ? (
-                  <Button
-                    variant="primary"
-                    onClick={() => onSendToPlayground(outputs.lottie.animation)}
-                  >
-                    {t.exportPanel.openInPlayground}
-                  </Button>
+                  <>
+                    <Button
+                      onClick={() =>
+                        downloadBytes(
+                          outputs.dotLottie.filename,
+                          outputs.dotLottie.file,
+                          'application/zip',
+                        )
+                      }
+                    >
+                      {t.exportPanel.downloadDotLottie}
+                    </Button>
+                    <Button
+                      variant="primary"
+                      onClick={() => onSendToPlayground(outputs.lottie.animation)}
+                    >
+                      {t.exportPanel.openInPlayground}
+                    </Button>
+                  </>
                 ) : null
               }
             />

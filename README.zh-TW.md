@@ -1,6 +1,6 @@
 # SVGMotion
 
-把靜態 SVG 圖示變成動畫，並匯出成 **Lottie JSON、CSS、獨立 SVG，或 React / Vue 元件**。
+把靜態 SVG 圖示變成動畫，並匯出成 **Lottie JSON、`.lottie` 封存檔、CSS、獨立 SVG，或 React / Vue 元件**。
 
 **[在瀏覽器裡試用 →](https://pinyi333.github.io/SVG-to-Lottie-tool/)** · [English](./README.md)
 
@@ -9,6 +9,7 @@
 ```
 上傳 SVG  →  選擇效果  →  預覽  →  匯出
                                     ├── Lottie JSON
+                                    ├── .lottie 封存檔
                                     ├── CSS ＋ 標記
                                     ├── 獨立 .svg
                                     ├── React 元件
@@ -50,24 +51,42 @@ const { window } = new JSDOM();
 const parsed = parseSvg(svgMarkup, { domParser: new window.DOMParser() });
 ```
 
+## 匯出 `.lottie` 封存檔
+
+`toDotLottie` 會把同一份動畫打包成 dotLottie 容器格式：一個 ZIP，裡面放 Lottie
+JSON 與一份 manifest。值得改用它的理由就是那份 manifest——單純的 `.json` 沒有
+地方記「這支動畫要循環播放」，所以每次嵌入都得再講一次，而且檔案一離開這個工具，
+設定就消失了。
+
+```ts
+import { toDotLottie } from 'svgmotion';
+
+const { file, filename, manifest } = toDotLottie(spec, { name: 'check' });
+await writeFile(filename, file); // file 是 Uint8Array
+```
+
+JSON 會被 deflate 壓縮，一個圖示通常會縮到原本的二十分之一左右。封存檔是
+**位元組層級可重現**的：每一筆項目都寫入固定時間戳，所以把產物一起 commit 的
+建置腳本，只有在圖稿真的改變時才會看到 diff。
+
 ## 各效果可以匯出到哪些格式
 
 不是每種動畫都能存活在每種格式裡，而且限制來自格式本身，不是這個工具。
 Lottie 沒有「輸入事件」這個概念，所以 hover 與 scroll 動畫永遠不可能變成 Lottie，
 只能是 CSS 與 JavaScript。把這件事講清楚，比匯出一個什麼都不會做的檔案好。
 
-| 效果       | CSS            | SVG         | Lottie        | React  | Vue    |
-| ---------- | -------------- | ----------- | ------------- | ------ | ------ |
-| 線條描繪   | ✅ dash offset | ✅          | ✅ Trim Paths | ✅     | ✅     |
-| 淡入       | ✅             | ✅          | ✅            | ✅     | ✅     |
-| 縮放       | ✅             | ✅          | ✅            | ✅     | ✅     |
-| 旋轉       | ✅             | ✅          | ✅            | ✅     | ✅     |
-| 彈跳       | ✅             | ✅          | ✅            | ✅     | ✅     |
-| 循環／來回 | ✅             | ✅          | ✅            | ✅     | ✅     |
-| 路徑變形   | ✅ `d: path()` | ✅          | ✅ 形狀關鍵格 | ✅     | ✅     |
-| Hover      | ✅ `:hover`    | ✅          | ❌ 無法表達   | ✅     | ✅     |
-| Scroll     | ✅ `view()`    | ❌          | ❌ 無法表達   | ✅     | ✅     |
-| 漸層填色   | ✅ `<defs>`    | ✅          | ⚠️ `gf`／`gs`，拉伸時為近似 | ✅ | ✅ |
+| 效果       | CSS            | SVG | Lottie                      | React | Vue |
+| ---------- | -------------- | --- | --------------------------- | ----- | --- |
+| 線條描繪   | ✅ dash offset | ✅  | ✅ Trim Paths               | ✅    | ✅  |
+| 淡入       | ✅             | ✅  | ✅                          | ✅    | ✅  |
+| 縮放       | ✅             | ✅  | ✅                          | ✅    | ✅  |
+| 旋轉       | ✅             | ✅  | ✅                          | ✅    | ✅  |
+| 彈跳       | ✅             | ✅  | ✅                          | ✅    | ✅  |
+| 循環／來回 | ✅             | ✅  | ✅                          | ✅    | ✅  |
+| 路徑變形   | ✅ `d: path()` | ✅  | ✅ 形狀關鍵格               | ✅    | ✅  |
+| Hover      | ✅ `:hover`    | ✅  | ❌ 無法表達                 | ✅    | ✅  |
+| Scroll     | ✅ `view()`    | ❌  | ❌ 無法表達                 | ✅    | ✅  |
+| 漸層填色   | ✅ `<defs>`    | ✅  | ⚠️ `gf`／`gs`，拉伸時為近似 | ✅    | ✅  |
 
 ## SVG 裡哪些內容會被保留
 

@@ -34,6 +34,12 @@ All notable changes to this project are documented here. The format follows
   than `pad` — it exports the nearest it can and says so. `Paint` gained
   `fillGradient` and `strokeGradient`.
 
+- dotLottie export (`toDotLottie`): packs the animation and a manifest into a
+  `.lottie` archive. The manifest carries the loop setting, which a bare
+  `.json` has nowhere to record. Entries are deflated and stamped with a fixed
+  timestamp, so the same animation always produces the same bytes. The Animate
+  workspace gained a "Download .lottie" button beside the Lottie export.
+
 ### Changed
 
 - A `url(#id)` fill or stroke that cannot be resolved now falls back to the

@@ -18,6 +18,26 @@ export function downloadText(filename: string, contents: string, mime: string): 
 }
 
 /**
+ * Saves binary data to a file, for the exports that are not text.
+ *
+ * A `.lottie` archive is a ZIP; handing it to `downloadText` would run it
+ * through a UTF-8 encode and corrupt every byte above 0x7f.
+ */
+export function downloadBytes(filename: string, bytes: Uint8Array, mime: string): void {
+  // A fresh copy, because a Blob over a view into a larger buffer would carry
+  // whatever else that buffer holds.
+  const blob = new Blob([new Uint8Array(bytes)], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+/**
  * Copies text to the clipboard, falling back for browsers and contexts where
  * the async Clipboard API is unavailable — it needs a secure context, which
  * a local file:// preview is not.

@@ -14,4 +14,5 @@ node examples/generate.mjs
 ```
 
 Outputs land in `generated/`, which is not committed — run the script to see
-them.
+them. The `.lottie` archives are byte-for-byte reproducible, so a project that
+does commit its generated output sees a diff only when the artwork changed.

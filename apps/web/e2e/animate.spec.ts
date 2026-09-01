@@ -1,4 +1,6 @@
+import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
+import { unzipSync } from 'fflate';
 
 const CHECK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
   <path id="tick" d="M20 6 9 17l-5-5" />
@@ -46,6 +48,28 @@ test('exports Lottie JSON that parses and describes the animation', async ({ pag
   // A stroke draw is the default preset, so trim paths must be present.
   const items = animation.layers[0].shapes[0].it;
   expect(items.map((item: { ty: string }) => item.ty)).toContain('tm');
+});
+
+test('downloads a .lottie archive holding the manifest and the animation', async ({ page }) => {
+  await uploadSvg(page);
+  await page.getByRole('tab', { name: 'Lottie JSON' }).click();
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Download .lottie' }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe('check.lottie');
+
+  const path = await download.path();
+  const archive = unzipSync(new Uint8Array(await readFile(path)));
+  const decoder = new TextDecoder();
+
+  // Reading the archive back is what proves the browser wrote real bytes: a
+  // ZIP handed through a text encode still downloads, and is still corrupt.
+  const manifest = JSON.parse(decoder.decode(archive['manifest.json']!));
+  expect(manifest.animations[0].id).toBe('check');
+  const animation = JSON.parse(decoder.decode(archive['animations/check.json']!));
+  expect(animation.layers[0].nm).toBe('tick');
 });
 
 test('switches export format without losing the loaded file', async ({ page }) => {

@@ -1,7 +1,7 @@
 # SVGMotion
 
-Turn a static SVG icon into an animation, and export it as **Lottie JSON, CSS, a
-standalone SVG, or a React or Vue component**.
+Turn a static SVG icon into an animation, and export it as **Lottie JSON, a
+`.lottie` archive, CSS, a standalone SVG, or a React or Vue component**.
 
 **[Try it in your browser →](https://pinyi333.github.io/SVG-to-Lottie-tool/)** · [繁體中文說明](./README.zh-TW.md)
 
@@ -10,6 +10,7 @@ Nothing is uploaded. Parsing, animating and exporting all happen on your machine
 ```
 Upload SVG  →  pick an effect  →  preview  →  export
                                               ├── Lottie JSON
+                                              ├── .lottie archive
                                               ├── CSS + markup
                                               ├── standalone .svg
                                               ├── React component
@@ -59,6 +60,26 @@ const { window } = new JSDOM();
 const parsed = parseSvg(svgMarkup, { domParser: new window.DOMParser() });
 ```
 
+## Exporting a `.lottie` archive
+
+`toDotLottie` packs the same animation into the dotLottie container format: a
+ZIP holding the Lottie JSON plus a manifest. The manifest is the reason to
+prefer it — a bare `.json` has nowhere to record whether it should loop, so a
+looping animation has to be described again at every embed, and the setting is
+lost the moment the file leaves this tool.
+
+```ts
+import { toDotLottie } from 'svgmotion';
+
+const { file, filename, manifest } = toDotLottie(spec, { name: 'check' });
+await writeFile(filename, file); // file is a Uint8Array
+```
+
+The JSON is deflated, which typically takes an icon to a twentieth of its size.
+Archives are byte-for-byte reproducible: every entry carries a fixed timestamp,
+so a build script that commits its output sees a diff only when the artwork
+changed.
+
 ## What each effect can export to
 
 Not every animation survives every format, and the gaps are in the format
@@ -66,18 +87,18 @@ itself rather than in this tool. Lottie has no concept of input events, so
 hover and scroll animations can never be Lottie — they are CSS and JavaScript
 only. Saying so plainly beats exporting a file that silently does nothing.
 
-| Effect           | CSS                                                         | SVG         | Lottie             | React   | Vue     |
-| ---------------- | ----------------------------------------------------------- | ----------- | ------------------ | ------- | ------- |
-| Stroke draw      | ✅ dash offset                                              | ✅          | ✅ Trim Paths      | ✅      | ✅      |
-| Fade             | ✅                                                          | ✅          | ✅                 | ✅      | ✅      |
-| Scale            | ✅                                                          | ✅          | ✅                 | ✅      | ✅      |
-| Rotate           | ✅                                                          | ✅          | ✅                 | ✅      | ✅      |
-| Bounce           | ✅                                                          | ✅          | ✅                 | ✅      | ✅      |
-| Loop / ping-pong | ✅                                                          | ✅          | ✅                 | ✅      | ✅      |
-| Path morph       | ✅ `d: path()`                                              | ✅          | ✅ shape keyframes | ✅      | ✅      |
-| Hover            | ✅ `:hover` rule                                            | ✅          | ❌ not expressible | ✅      | ✅      |
-| Scroll           | ✅ `view()` timeline                                        | ❌          | ❌ not expressible | ✅      | ✅      |
-| Gradient paint   | ✅ `<defs>`                                                 | ✅          | ⚠️ `gf` / `gs`, approximated when stretched | ✅ | ✅ |
+| Effect           | CSS                  | SVG | Lottie                                      | React | Vue |
+| ---------------- | -------------------- | --- | ------------------------------------------- | ----- | --- |
+| Stroke draw      | ✅ dash offset       | ✅  | ✅ Trim Paths                               | ✅    | ✅  |
+| Fade             | ✅                   | ✅  | ✅                                          | ✅    | ✅  |
+| Scale            | ✅                   | ✅  | ✅                                          | ✅    | ✅  |
+| Rotate           | ✅                   | ✅  | ✅                                          | ✅    | ✅  |
+| Bounce           | ✅                   | ✅  | ✅                                          | ✅    | ✅  |
+| Loop / ping-pong | ✅                   | ✅  | ✅                                          | ✅    | ✅  |
+| Path morph       | ✅ `d: path()`       | ✅  | ✅ shape keyframes                          | ✅    | ✅  |
+| Hover            | ✅ `:hover` rule     | ✅  | ❌ not expressible                          | ✅    | ✅  |
+| Scroll           | ✅ `view()` timeline | ❌  | ❌ not expressible                          | ✅    | ✅  |
+| Gradient paint   | ✅ `<defs>`          | ✅  | ⚠️ `gf` / `gs`, approximated when stretched | ✅    | ✅  |
 
 ## What of an SVG survives the trip
 

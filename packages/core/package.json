@@ -1,10 +1,11 @@
 {
   "name": "svgmotion",
   "version": "0.1.0",
-  "description": "Turn static SVG icons into animations and export them as CSS, SVG, Lottie JSON, React or Vue. Framework-agnostic, runs in the browser and in Node.",
+  "description": "Turn static SVG icons into animations and export them as CSS, SVG, Lottie JSON, dotLottie, React or Vue. Framework-agnostic, runs in the browser and in Node.",
   "keywords": [
     "svg",
     "lottie",
+    "dotlottie",
     "animation",
     "icon",
     "bodymovin",
@@ -45,6 +46,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "fflate": "^0.8.3",
     "svg-path-commander": "^2.3.1"
   },
   "devDependencies": {

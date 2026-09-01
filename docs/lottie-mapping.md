@@ -135,14 +135,14 @@ Lottie carries gradients as `gf` (fill) and `gs` (stroke) items, so a gradient
 survives the export as a real gradient rather than a flattened colour. The
 format states one with less than SVG does, and the difference is worth knowing:
 
-| SVG                                    | Lottie                                            |
-| -------------------------------------- | ------------------------------------------------- |
-| `x1 y1 x2 y2`                          | `s` and `e`, the same two points                  |
-| `cx cy r`                              | `s` at the centre, `e` one radius away            |
-| `fx fy`                                | `h` (percent of the radius) and `a` (degrees)     |
-| stops with `stop-opacity`              | `g.k`: `[offset,r,g,b]…` then `[offset,alpha]…`   |
-| `gradientUnits`, `gradientTransform`   | nothing — folded into the two points              |
-| `spreadMethod`                         | nothing — always pads                             |
+| SVG                                  | Lottie                                          |
+| ------------------------------------ | ----------------------------------------------- |
+| `x1 y1 x2 y2`                        | `s` and `e`, the same two points                |
+| `cx cy r`                            | `s` at the centre, `e` one radius away          |
+| `fx fy`                              | `h` (percent of the radius) and `a` (degrees)   |
+| stops with `stop-opacity`            | `g.k`: `[offset,r,g,b]…` then `[offset,alpha]…` |
+| `gradientUnits`, `gradientTransform` | nothing — folded into the two points            |
+| `spreadMethod`                       | nothing — always pads                           |
 
 The last two rows are where fidelity is lost. Two points can express any
 rotation, uniform scale and translation exactly, but not the ellipse a
@@ -156,6 +156,41 @@ The colour ramp is one flat array with the colour stops first and the opacity
 stops after them, so a fading gradient repeats its offsets in both sections.
 The alpha section is written only when a stop actually asks for transparency;
 players treat its absence as fully opaque.
+
+## The container says what the JSON cannot
+
+A Lottie `.json` describes frames, not playback. Whether the animation should
+loop is not in it — `toLottie` returns that as a separate `loop` flag, and
+every embed has to be told again.
+
+`toDotLottie` is where that flag finally has somewhere to live. The dotLottie
+container is a ZIP holding the same JSON under `animations/<id>.json` plus a
+`manifest.json`:
+
+```json
+{
+  "version": "1",
+  "revision": 1,
+  "generator": "svgmotion",
+  "animations": [
+    {
+      "id": "check",
+      "loop": true,
+      "speed": 1,
+      "direction": 1,
+      "playMode": "normal",
+      "autoplay": true
+    }
+  ]
+}
+```
+
+Nothing about the animation itself changes — unzip the archive and the JSON is
+identical to what `toLottie` produced. What changes is that the loop and
+ping-pong choices made in this tool now travel with the file.
+
+Entries are deflated and stamped with a fixed timestamp, so the same animation
+always produces the same bytes.
 
 ## What has no equivalent
 

@@ -36,11 +36,18 @@ Otherwise `pnpm exec playwright install chromium` once is enough.
 ```
 packages/core/     the svgmotion package — parsing, presets, exporters
 apps/web/          the React app, a consumer of that package
+examples/          a build script that uses the package the way you would
+docs/              notes on how the formats map onto each other
 ```
 
 The core package has no UI dependencies and must keep it that way. That
 constraint is what makes it usable from a build script or a server, which is
 most of the point of publishing it separately.
+
+The three `.bat` files in the root are the maintainer's own Windows shortcuts
+for `git pull`, `git commit && git push`, and creating the remote. They are not
+part of the build and nothing in the project calls them — you can ignore them
+entirely on any platform.
 
 ## How the pipeline fits together
 

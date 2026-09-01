@@ -47,7 +47,8 @@ export const zhTW: Dictionary = {
     triggerHover: '滑鼠懸停時',
     triggerScroll: '捲動時',
     morphTarget: '變形目標（路徑資料）',
-    morphTargetHint: '貼上要變形成的路徑 `d` 值，座標需在同一個 viewBox 內，子路徑數量必須和原形狀相同。',
+    morphTargetHint:
+      '貼上要變形成的路徑 `d` 值，座標需在同一個 viewBox 內，子路徑數量必須和原形狀相同。',
   },
 
   presets: {
@@ -74,6 +75,7 @@ export const zhTW: Dictionary = {
     copy: '複製',
     copied: '已複製',
     download: '下載',
+    downloadDotLottie: '下載 .lottie',
     openInPlayground: '在遊樂場開啟',
     formats: {
       lottie: 'Lottie JSON',

@@ -74,6 +74,7 @@ export const en = {
     copy: 'Copy',
     copied: 'Copied',
     download: 'Download',
+    downloadDotLottie: 'Download .lottie',
     openInPlayground: 'Open in Playground',
     formats: {
       lottie: 'Lottie JSON',

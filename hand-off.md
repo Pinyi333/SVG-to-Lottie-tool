@@ -9,7 +9,7 @@
 
 ## 一句話狀態
 
-核心引擎與網頁工具都已完成並通過測試，**CI 全綠**，v0.2 roadmap 的五項功能已完成四項（path morph、hover、scroll、漸層）；卡在 GitHub Pages 尚未啟用，demo 網址還沒生出來，因此還不能送 Codex for OSS 申請。
+核心引擎與網頁工具都已完成並通過測試，**CI 全綠**，v0.2 roadmap 原訂的五項功能**全部做完**（path morph、hover、scroll、漸層、dotLottie）；卡在 GitHub Pages 尚未啟用，demo 網址還沒生出來，因此還不能送 Codex for OSS 申請。
 
 ---
 
@@ -27,9 +27,9 @@
 
 | 項目                                                        | 狀態                                                     |
 | ----------------------------------------------------------- | -------------------------------------------------------- |
-| 核心套件 `svgmotion`                                        | ✅ 完成，169 個測試通過                                  |
-| 網頁 App（Animate + Playground）                            | ✅ 完成，12 個單元測試 + 9 個 e2e 測試通過               |
-| v0.2 功能：path morph／hover／scroll／漸層                  | ✅ 完成（剩 dotLottie 輸出未做）                         |
+| 核心套件 `svgmotion`                                        | ✅ 完成，179 個測試通過                                  |
+| 網頁 App（Animate + Playground）                            | ✅ 完成，12 個單元測試 + 10 個 e2e 測試通過              |
+| v0.2 功能（morph／hover／scroll／漸層／dotLottie）          | ✅ 五項全部完成                                          |
 | 文件（README 中英、CONTRIBUTING、SECURITY、CoC、CHANGELOG） | ✅ 完成                                                  |
 | CI（lint / format / typecheck / test / build / e2e）        | ✅ **全綠**                                              |
 | GitHub Pages demo                                           | ⛔ **卡住** — Pages 未啟用                               |
@@ -67,7 +67,7 @@ release workflow 會先跑完整測試、確認 tag 與套件版本一致才發�
 
 ### ④ 開 v0.2 roadmap issues
 
-貼 `good first issue` / `help wanted` 標籤。原本列的五項裡，路徑變形（path morph）、hover 動畫、scroll 動畫、Lottie 漸層支援都**已經做完了**，剩下 **dotLottie 輸出**；可以再想幾項新的（例如 morph 的瀏覽器相容性實測、Playground 的 morph 範例、Lottie 匯出的 `spreadMethod` 近似改善）。
+貼 `good first issue` / `help wanted` 標籤。原本列的五項**全部做完了**，所以要開的是新的一批。候選：Playground 支援直接拖入 `.lottie` 封存檔、morph 的 `d: path()` 各瀏覽器相容性實測、Lottie 匯出的 `spreadMethod` 近似改善、`<use>` 展平、dotLottie 多動畫封裝。
 **這是加分項**——公開 roadmap 是「活躍維護」的訊號。
 
 ### ⑤ 錄 demo GIF 放進 README
@@ -112,8 +112,8 @@ pnpm install
 pnpm build        # 必須先 build，apps/web 是吃 core 的建置產物
 pnpm lint
 pnpm typecheck
-pnpm test         # core 169 + web 12
-pnpm test:e2e     # Playwright 9 個，跑在正式建置版本上
+pnpm test         # core 179 + web 12
+pnpm test:e2e     # Playwright 10 個，跑在正式建置版本上
 ```
 
 環境若已有 Chromium：`PLAYWRIGHT_CHROMIUM_PATH=/path/to/chromium pnpm test:e2e`
@@ -122,13 +122,14 @@ pnpm test:e2e     # Playwright 9 個，跑在正式建置版本上
 
 ## 已完成的功能（依 git 歷史）
 
-| 功能                | commit    | 重點                                                                                       |
-| ------------------- | --------- | ------------------------------------------------------------------------------------------ |
-| GitHub 操作腳本     | `95fc935` | `github-init.bat`、`github-pull.bat`、`update-github.bat`（README 尚未提及，待評估）        |
-| 路徑變形 path morph | `5e9f3e2` | `morph` preset ＋ `params.toPath`；`parse/morph.ts` 用 de Casteljau 對齊段數；CSS 出 `d: path()`，Lottie 出原生 shape keyframes；子路徑數不符發 `morph-mismatch` 警告 |
-| Hover 觸發          | `c86484d` | `Track.trigger`；CSS 掛在 `.svgm-icon:hover` 下並重列 always-on 動畫；Lottie 剔除並警告      |
-| Scroll 觸發         | `f314555` | `animation-timeline: view()`；混用時逐項配對 timeline；獨立 SVG 匯出對 scroll 另外警告      |
-| 漸層 gradient       | `93298ad` | 線性／放射漸層在 fill 與 stroke 都能解析與匯出；CSS/SVG/React/Vue 出 `<defs>`，Lottie 出原生 `gf`／`gs` |
+| 功能                | commit    | 重點                                                                                                                                                                           |
+| ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| GitHub 操作腳本     | `95fc935` | `github-init.bat`、`github-pull.bat`、`update-github.bat`。已評估：這是維護者自己的 Windows 捷徑，不是專案工具，所以只在 `CONTRIBUTING.md` 說明「可以完全忽略」，不寫進 README |
+| 路徑變形 path morph | `5e9f3e2` | `morph` preset ＋ `params.toPath`；`parse/morph.ts` 用 de Casteljau 對齊段數；CSS 出 `d: path()`，Lottie 出原生 shape keyframes；子路徑數不符發 `morph-mismatch` 警告          |
+| Hover 觸發          | `c86484d` | `Track.trigger`；CSS 掛在 `.svgm-icon:hover` 下並重列 always-on 動畫；Lottie 剔除並警告                                                                                        |
+| Scroll 觸發         | `f314555` | `animation-timeline: view()`；混用時逐項配對 timeline；獨立 SVG 匯出對 scroll 另外警告                                                                                         |
+| 漸層 gradient       | `93298ad` | 線性／放射漸層在 fill 與 stroke 都能解析與匯出；CSS/SVG/React/Vue 出 `<defs>`，Lottie 出原生 `gf`／`gs`                                                                        |
+| dotLottie 輸出      | 本次      | `toDotLottie`：ZIP＋manifest；loop 設定終於有地方放；deflate 壓縮（bars 23KB → 1.1KB）；固定時間戳所以位元組可重現                                                             |
 
 漸層的設計重點（詳見 `docs/lottie-mapping.md`）：**座標保持原樣，把 CTM、bounding box、`gradientTransform` 全部合成到一個 `transform` 矩陣裡**。這樣 SVG／CSS 匯出可以直接把矩陣寫到 `gradientTransform` 上，傾斜與非等比縮放都完全精確；Lottie 只認兩個點，所以只有那裡是近似值，而且會明確警告。
 

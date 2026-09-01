@@ -72,6 +72,13 @@ export {
   type LottieOptions,
   type LottieOutput,
 } from './render/lottie.js';
+export {
+  toDotLottie,
+  type DotLottieManifest,
+  type DotLottieManifestAnimation,
+  type DotLottieOptions,
+  type DotLottieOutput,
+} from './render/dotlottie.js';
 export { toReact } from './render/react.js';
 export { toVue } from './render/vue.js';
 export { componentName, type ComponentOptions, type ComponentOutput } from './render/framework.js';

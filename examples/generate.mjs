@@ -15,6 +15,7 @@ import {
   createSpec,
   parseSvg,
   toCss,
+  toDotLottie,
   toLottie,
   toReact,
   toSvg,
@@ -51,6 +52,7 @@ async function main() {
     });
 
     const lottie = toLottie(spec, { name });
+    const dotLottie = toDotLottie(spec, { name });
     const css = toCss(spec);
     const svg = toSvg(spec, { respectReducedMotion: true });
     const react = toReact(spec, { name });
@@ -58,6 +60,7 @@ async function main() {
 
     await Promise.all([
       writeFile(join(outDir, `${name}.json`), JSON.stringify(lottie.animation, null, 2)),
+      writeFile(join(outDir, dotLottie.filename), dotLottie.file),
       writeFile(join(outDir, `${name}.css`), `${css.css}\n`),
       writeFile(join(outDir, `${name}.animated.svg`), `${svg.html}\n`),
       writeFile(join(outDir, react.filename), react.code),
@@ -73,7 +76,7 @@ async function main() {
     }
   }
 
-  console.log(`\nWrote ${files.length * 5} files to examples/generated/`);
+  console.log(`\nWrote ${files.length * 6} files to examples/generated/`);
 }
 
 await main();
