@@ -9,7 +9,7 @@
 
 ## 一句話狀態
 
-核心引擎與網頁工具都已完成並通過測試，**CI 全綠**，v0.2 roadmap 原訂的五項功能**全部做完**（path morph、hover、scroll、漸層、dotLottie）；卡在 GitHub Pages 尚未啟用，demo 網址還沒生出來，因此還不能送 Codex for OSS 申請。
+核心引擎與網頁工具都已完成並通過測試，**CI 全綠**，v0.2 roadmap 原訂的五項功能**全部做完**（path morph、hover、scroll、漸層、dotLottie），**demo 已經成功部署到 GitHub Pages**。工程面沒有阻塞項了；送 Codex for OSS 申請之前建議先累積使用量與 star。
 
 ---
 
@@ -25,57 +25,43 @@
 
 ## 目前狀態總覽
 
-| 項目                                                        | 狀態                                                                                     |
-| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| 核心套件 `svgmotion`                                        | ✅ 完成，179 個測試通過                                                                  |
-| 網頁 App（Animate + Playground）                            | ✅ 完成，17 個單元測試 + 11 個 e2e 測試通過                                              |
-| v0.2 功能（morph／hover／scroll／漸層／dotLottie）          | ✅ 五項全部完成                                                                          |
-| 文件（README 中英、CONTRIBUTING、SECURITY、CoC、CHANGELOG） | ✅ 完成                                                                                  |
-| CI（lint / format / typecheck / test / build / e2e）        | ✅ **全綠**（PR #1 上 Node 20／22 都過）                                                 |
-| PR #1（morph／hover／scroll／漸層／dotLottie）              | ✅ 已合併進 `main`（`aa1ba8d`）                                                          |
-| GitHub Pages demo                                           | 🟡 Pages 已啟用，`build` job 過了；`deploy` job 被 environment 規則擋（見下）            |
-| 預設分支                                                    | ⚠️ 還是 `claude/codex-oss-project-coq6cn`，應改成 `main`（**這正是 deploy 被擋的原因**） |
-| npm 發佈 `v0.1.0`                                           | ⬜ 未開始（需要 `NPM_TOKEN`）                                                            |
-| v0.2 roadmap issues                                         | ✅ 已開 #2〜#6                                                                           |
-| demo GIF                                                    | ⬜ 未開始                                                                                |
-| 送出 Codex for OSS 申請                                     | ⬜ 未開始（建議先累積使用量，見下方）                                                    |
+| 項目                                                        | 狀態                                                                                                 |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 核心套件 `svgmotion`                                        | ✅ 完成，179 個測試通過                                                                              |
+| 網頁 App（Animate + Playground）                            | ✅ 完成，17 個單元測試 + 11 個 e2e 測試通過                                                          |
+| v0.2 功能（morph／hover／scroll／漸層／dotLottie）          | ✅ 五項全部完成                                                                                      |
+| 文件（README 中英、CONTRIBUTING、SECURITY、CoC、CHANGELOG） | ✅ 完成                                                                                              |
+| CI（lint / format / typecheck / test / build / e2e）        | ✅ **全綠**（PR #1 上 Node 20／22 都過）                                                             |
+| PR #1（morph／hover／scroll／漸層／dotLottie）              | ✅ 已合併進 `main`（`aa1ba8d`）                                                                      |
+| GitHub Pages demo                                           | 🟡 Pages 已啟用，`build` job 過了；`deploy` job 被 environment 規則擋（見下）                        |
+| 預設分支                                                    | ⚠️ 還是 `claude/codex-oss-project-coq6cn`，建議改成 `main`（已不再阻塞部署，但 repo 首頁顯示的是它） |
+| npm 發佈 `v0.1.0`                                           | ⬜ 未開始（需要 `NPM_TOKEN`）                                                                        |
+| v0.2 roadmap issues                                         | ✅ 已開 #2〜#6                                                                                       |
+| demo GIF                                                    | ⬜ 未開始                                                                                            |
+| 送出 Codex for OSS 申請                                     | ⬜ 未開始（建議先累積使用量，見下方）                                                                |
 
 ---
 
 ## 下一步（依順序）
 
-### ① 讓 Pages 部署通過 ← 唯一的阻塞點
+### ① 開啟 GitHub Pages ✅ 已完成（2026-09-01）
 
-**Pages 本身已經開好了**（2026-09-01）。`Settings → Pages → Source` 已設為 GitHub Actions，
-證據是 Deploy demo 的 `build` job 現在會完整跑完，包含 `actions/configure-pages@v5`
-——那一步之前每次都失敗，就是因為 Pages 沒開。
+Demo 網址：https://pinyi333.github.io/SVG-to-Lottie-tool/
 
-**現在卡的是 `deploy` job**：它在 2 秒內結束、**一個 step 都沒有執行**（run #5，
-14:51:00 → 14:51:02）。這是被 **environment 保護規則擋掉**的特徵，不是程式錯誤。
+花了兩步才通，兩步都記在下面的「踩過的坑」第 7 條：先是 Pages 沒啟用（`build` job
+死在 `configure-pages`），啟用之後換 `deploy` job 被 `github-pages` environment 的
+分支政策擋掉。後者是把 `main` 加進 `Settings → Environments → github-pages →
+Deployment branches` 解掉的。
 
-原因幾乎可以確定是：GitHub 自動建立的 `github-pages` environment **預設只允許從預設
-分支部署**，而這個 repo 的預設分支是 `claude/codex-oss-project-coq6cn`，不是 `main`。
-所以從 `main` 推上去的部署會被拒。
-
-> 註：這是「證據非常強的推論」而不是親眼確認的設定值——`/repos/.../environments`
-> 與 `/repos/.../pages` 這兩個 API 路徑被代理擋掉，讀不到。要確認就看
-> `Settings → Environments → github-pages → Deployment branches` 寫了什麼。
-
-**任一個改掉就會通：**
-
-1. `Settings → General → Default branch` → 改成 `main`，或
-2. `Settings → Environments → `github-pages`` → Deployment branches → 加入 `main`
-
-改完之後**要再推一個 commit 到 `main`**（或按 Actions 頁的 Run workflow）才會重跑，
-Deploy demo 只在 push to main 與 workflow_dispatch 時觸發。
+要重新部署：推任何 commit 到 `main`，或在 Actions 頁按 Run workflow。
 
 ### ② 改預設分支成 `main`
 
 `Settings → General → Default branch` → ⇄ → `main`
 改完 `claude/codex-oss-project-coq6cn` 可以刪除（內容是 `main` 的前段）。
 
-**這一項和 ① 是同一件事**：預設分支改成 `main` 之後，`github-pages` environment 的
-預設政策就會允許從 `main` 部署，兩個問題一起解決。
+已經不阻塞部署了（environment 政策已直接允許 `main`），但還是建議改：repo 首頁預設
+顯示的是 `claude/codex-oss-project-coq6cn`，對一個要拿去申請的專案來說是不必要的雜訊。
 
 ### ③ 發佈到 npm
 
@@ -196,7 +182,17 @@ pnpm test:e2e     # Playwright 11 個，跑在正式建置版本上
 原因：幾何已經平移到以形狀中心為原點，圖層卻同時把 `a`（anchor）和 `p`（position）都設成中心；播放器算的是 `translate(p) · rotate · scale · translate(-a)`，兩者相同就互相抵銷成單位矩陣。
 修法：`a` 設為 `[0, 0]`，只用 `p` 把形狀放回畫布位置。快照測試與結構斷言全都抓不到這個錯——**是把 JSON 丟進真正的播放器截圖比對才發現的**。已加上會失敗的回歸測試（`lottie-playback.test.ts` 會把播放器算出的座標還原出來，檢查是否落在畫布內）。
 
-**7. 同一個問題不要警告兩次。** 曾經 preset 驗證器和 Lottie 匯出器各報一次「這個形狀沒有 stroke」，措辭不同，看起來像兩個問題。已移除重複。
+**7. GitHub Pages 部署失敗要分兩層看：`build` 還是 `deploy`。**（2026-09-01 解決）
+症狀一：`build` job 死在 `actions/configure-pages@v5`。
+原因：Pages 根本沒啟用——那個 action 就是在向 GitHub 宣告要部署到 Pages，沒開必然失敗。程式面不用改任何東西。
+修法：`Settings → Pages → Source` 選 GitHub Actions。
+
+症狀二：Pages 開好之後，`build` 過了，換 `deploy` job 在 **2 秒內失敗、一個 step 都沒跑**。
+原因：`github-pages` 這個 environment 預設**只允許從預設分支部署**，而本 repo 的預設分支是 `claude/codex-oss-project-coq6cn`，不是 `main`。
+修法：把 `main` 加進 `Settings → Environments → github-pages → Deployment branches`（或把預設分支改成 `main`）。
+**辨認方式**：`deploy` job 的 steps 數量。0 steps = 被 environment 規則擋在門外；有 steps = 才是真的部署錯誤。
+
+**8. 同一個問題不要警告兩次。** 曾經 preset 驗證器和 Lottie 匯出器各報一次「這個形狀沒有 stroke」，措辭不同，看起來像兩個問題。已移除重複。
 
 ---
 
