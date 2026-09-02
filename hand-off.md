@@ -25,38 +25,57 @@
 
 ## 目前狀態總覽
 
-| 項目                                                        | 狀態                                                     |
-| ----------------------------------------------------------- | -------------------------------------------------------- |
-| 核心套件 `svgmotion`                                        | ✅ 完成，179 個測試通過                                  |
-| 網頁 App（Animate + Playground）                            | ✅ 完成，17 個單元測試 + 11 個 e2e 測試通過              |
-| v0.2 功能（morph／hover／scroll／漸層／dotLottie）          | ✅ 五項全部完成                                          |
-| 文件（README 中英、CONTRIBUTING、SECURITY、CoC、CHANGELOG） | ✅ 完成                                                  |
-| CI（lint / format / typecheck / test / build / e2e）        | ✅ **全綠**（PR #1 上 Node 20／22 都過）                 |
-| PR #1（morph／hover／scroll／漸層／dotLottie）              | 🟢 已開，CI 綠，等待你 review 與合併                     |
-| GitHub Pages demo                                           | ⛔ **卡住** — Pages 未啟用                               |
-| 預設分支                                                    | ⚠️ 還是 `claude/codex-oss-project-coq6cn`，應改成 `main` |
-| npm 發佈 `v0.1.0`                                           | ⬜ 未開始（需要 `NPM_TOKEN`）                            |
-| v0.2 roadmap issues                                         | ✅ 已開 #2〜#6                                           |
-| demo GIF                                                    | ⬜ 未開始                                                |
-| 送出 Codex for OSS 申請                                     | ⬜ 未開始（建議先累積使用量，見下方）                    |
+| 項目                                                        | 狀態                                                                                     |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| 核心套件 `svgmotion`                                        | ✅ 完成，179 個測試通過                                                                  |
+| 網頁 App（Animate + Playground）                            | ✅ 完成，17 個單元測試 + 11 個 e2e 測試通過                                              |
+| v0.2 功能（morph／hover／scroll／漸層／dotLottie）          | ✅ 五項全部完成                                                                          |
+| 文件（README 中英、CONTRIBUTING、SECURITY、CoC、CHANGELOG） | ✅ 完成                                                                                  |
+| CI（lint / format / typecheck / test / build / e2e）        | ✅ **全綠**（PR #1 上 Node 20／22 都過）                                                 |
+| PR #1（morph／hover／scroll／漸層／dotLottie）              | ✅ 已合併進 `main`（`aa1ba8d`）                                                          |
+| GitHub Pages demo                                           | 🟡 Pages 已啟用，`build` job 過了；`deploy` job 被 environment 規則擋（見下）            |
+| 預設分支                                                    | ⚠️ 還是 `claude/codex-oss-project-coq6cn`，應改成 `main`（**這正是 deploy 被擋的原因**） |
+| npm 發佈 `v0.1.0`                                           | ⬜ 未開始（需要 `NPM_TOKEN`）                                                            |
+| v0.2 roadmap issues                                         | ✅ 已開 #2〜#6                                                                           |
+| demo GIF                                                    | ⬜ 未開始                                                                                |
+| 送出 Codex for OSS 申請                                     | ⬜ 未開始（建議先累積使用量，見下方）                                                    |
 
 ---
 
 ## 下一步（依順序）
 
-### ① 開啟 GitHub Pages ← 唯一的阻塞點
+### ① 讓 Pages 部署通過 ← 唯一的阻塞點
 
-`Settings → Pages → Source` 選 **GitHub Actions**（不是 Deploy from a branch）。
+**Pages 本身已經開好了**（2026-09-01）。`Settings → Pages → Source` 已設為 GitHub Actions，
+證據是 Deploy demo 的 `build` job 現在會完整跑完，包含 `actions/configure-pages@v5`
+——那一步之前每次都失敗，就是因為 Pages 沒開。
 
-開啟後重跑 Deploy demo workflow，網址會是
-`https://pinyi333.github.io/SVG-to-Lottie-tool/`
+**現在卡的是 `deploy` job**：它在 2 秒內結束、**一個 step 都沒有執行**（run #5，
+14:51:00 → 14:51:02）。這是被 **environment 保護規則擋掉**的特徵，不是程式錯誤。
 
-> Deploy 目前失敗在 `actions/configure-pages@v5` 這一步，這不是設定寫錯——那個 action 就是在向 GitHub 宣告要部署到 Pages，Pages 沒開它必然失敗。**程式面不需要再改任何東西。**
+原因幾乎可以確定是：GitHub 自動建立的 `github-pages` environment **預設只允許從預設
+分支部署**，而這個 repo 的預設分支是 `claude/codex-oss-project-coq6cn`，不是 `main`。
+所以從 `main` 推上去的部署會被拒。
+
+> 註：這是「證據非常強的推論」而不是親眼確認的設定值——`/repos/.../environments`
+> 與 `/repos/.../pages` 這兩個 API 路徑被代理擋掉，讀不到。要確認就看
+> `Settings → Environments → github-pages → Deployment branches` 寫了什麼。
+
+**任一個改掉就會通：**
+
+1. `Settings → General → Default branch` → 改成 `main`，或
+2. `Settings → Environments → `github-pages`` → Deployment branches → 加入 `main`
+
+改完之後**要再推一個 commit 到 `main`**（或按 Actions 頁的 Run workflow）才會重跑，
+Deploy demo 只在 push to main 與 workflow_dispatch 時觸發。
 
 ### ② 改預設分支成 `main`
 
 `Settings → General → Default branch` → ⇄ → `main`
 改完 `claude/codex-oss-project-coq6cn` 可以刪除（內容是 `main` 的前段）。
+
+**這一項和 ① 是同一件事**：預設分支改成 `main` 之後，`github-pages` environment 的
+預設政策就會允許從 `main` 部署，兩個問題一起解決。
 
 ### ③ 發佈到 npm
 
