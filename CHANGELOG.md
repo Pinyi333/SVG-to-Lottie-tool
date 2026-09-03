@@ -50,6 +50,19 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- Rounded rectangles were drawn with two of their four corners wrong. The
+  shape-to-path helper writes them as smooth cubics (`s`) following `h` and
+  `v` lines; SVG reflects a smooth cubic's first control point only when the
+  previous command was itself a cubic, but the conversion turned those lines
+  into cubics first and reflected off them anyway. On a 4x8 bar with `rx="1"`
+  the bottom-right control point landed a whole unit below the shape, drawing
+  a spike and pushing the bounding box outside the rectangle. `rect` now
+  builds its own path, as `circle` and `ellipse` already did, including the
+  `rx`/`ry` defaulting and clamping rules.
+- The Chart sample animated nothing when clicked. Its bars are filled and have
+  no stroke, and the workspace opened with stroke draw selected, so the
+  animation ran correctly on a stroke that was not there. Each sample now
+  names the effect its own artwork can show.
 - Lottie exports drew every shape around the canvas origin instead of where it
   sat in the source, leaving most icons a quarter visible in the corner. Each
   layer set both its anchor and its position to the shape's centre, which a

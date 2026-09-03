@@ -34,6 +34,65 @@ function ellipsePathData(cx: number, cy: number, rx: number, ry: number): string
   );
 }
 
+/**
+ * Builds a rectangle, with exact cubic corners when it is rounded.
+ *
+ * `shapeToPathArray` writes a rounded rect using smooth-cubic (`s`) segments
+ * after `h` and `v` lines. SVG says a smooth cubic reflects the previous
+ * control point only when the previous command was itself a cubic, and takes
+ * the current point otherwise — but `pathToCurve` converts those lines to
+ * cubics first and then reflects off them anyway. Two of the four corners come
+ * out with a control point outside the rectangle: on a 4x8 bar with `rx="1"`
+ * the bottom-right control lands a whole unit below the bottom edge, which
+ * draws a spike and pushes the bounding box past the shape.
+ *
+ * Constructing the corners here sidesteps that entirely, the same way
+ * `ellipsePathData` sidesteps the generic arc conversion.
+ */
+function rectPathData(el: Element): string | null {
+  const x = num(el.getAttribute('x'));
+  const y = num(el.getAttribute('y'));
+  const width = num(el.getAttribute('width'));
+  const height = num(el.getAttribute('height'));
+  if (!(width > 0) || !(height > 0)) return null;
+
+  // `rx` and `ry` default to each other, so a rect with only one of them is
+  // still rounded on both axes. An explicit zero is not the same as absent:
+  // it squares the corners off.
+  const rawRx = el.getAttribute('rx');
+  const rawRy = el.getAttribute('ry');
+  let rx = rawRx === null ? (rawRy === null ? 0 : num(rawRy)) : num(rawRx);
+  let ry = rawRy === null ? (rawRx === null ? 0 : num(rawRx)) : num(rawRy);
+
+  // A radius past the half-extent is clamped rather than allowed to fold the
+  // shape inside out.
+  rx = Math.max(0, Math.min(rx, width / 2));
+  ry = Math.max(0, Math.min(ry, height / 2));
+
+  const right = x + width;
+  const bottom = y + height;
+
+  if (!(rx > 0) || !(ry > 0)) {
+    return `M${x} ${y}H${right}V${bottom}H${x}Z`;
+  }
+
+  const ox = rx * KAPPA;
+  const oy = ry * KAPPA;
+
+  return (
+    `M${x + rx} ${y}` +
+    `H${right - rx}` +
+    `C${right - rx + ox} ${y} ${right} ${y + ry - oy} ${right} ${y + ry}` +
+    `V${bottom - ry}` +
+    `C${right} ${bottom - ry + oy} ${right - rx + ox} ${bottom} ${right - rx} ${bottom}` +
+    `H${x + rx}` +
+    `C${x + rx - ox} ${bottom} ${x} ${bottom - ry + oy} ${x} ${bottom - ry}` +
+    `V${y + ry}` +
+    `C${x} ${y + ry - oy} ${x + rx - ox} ${y} ${x + rx} ${y}` +
+    `Z`
+  );
+}
+
 const num = (raw: string | null, fallback = 0): number => {
   if (raw === null) return fallback;
   const parsed = parseFloat(raw);
@@ -60,16 +119,7 @@ export function elementToPathData(el: Element): string | null {
   let options: Record<string, unknown> | null = null;
   switch (tag) {
     case 'rect':
-      options = {
-        type: 'rect',
-        x: num(el.getAttribute('x')),
-        y: num(el.getAttribute('y')),
-        width: num(el.getAttribute('width')),
-        height: num(el.getAttribute('height')),
-        rx: num(el.getAttribute('rx')),
-        ry: num(el.getAttribute('ry')),
-      };
-      break;
+      return rectPathData(el);
     case 'circle': {
       const r = num(el.getAttribute('r'));
       return ellipsePathData(num(el.getAttribute('cx')), num(el.getAttribute('cy')), r, r);

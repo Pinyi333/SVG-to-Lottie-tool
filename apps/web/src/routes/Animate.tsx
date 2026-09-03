@@ -90,12 +90,15 @@ export function Animate({ onSendToPlayground }: { onSendToPlayground: (data: unk
 
   const parsed = useMemo(() => (source ? parseSvg(source.text) : null), [source]);
 
-  const loadSvg = useCallback((text: string, name: string) => {
+  const loadSvg = useCallback((text: string, name: string, effect?: PresetName) => {
     setSource({ text, name });
     const nextParsed = parseSvg(text);
     // Selecting everything up front means the tool does something useful the
     // moment a file lands, rather than showing an inert preview.
     setSelected(new Set(nextParsed.nodes.map((node) => node.id)));
+    // A sample brings its own effect, because the default one does not suit
+    // every drawing — stroke draw shows nothing on filled artwork.
+    if (effect) setSettings((current) => ({ ...current, preset: effect }));
     setReplayKey((key) => key + 1);
   }, []);
 
@@ -155,7 +158,10 @@ export function Animate({ onSendToPlayground }: { onSendToPlayground: (data: unk
         <div className="flex flex-wrap items-center justify-center gap-2">
           <span className="text-xs text-slate-500">{t.drop.sample}</span>
           {SAMPLES.map((sample) => (
-            <Button key={sample.id} onClick={() => loadSvg(sample.svg, `${sample.id}.svg`)}>
+            <Button
+              key={sample.id}
+              onClick={() => loadSvg(sample.svg, `${sample.id}.svg`, sample.effect)}
+            >
               {sample.label}
             </Button>
           ))}

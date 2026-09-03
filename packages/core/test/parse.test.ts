@@ -148,3 +148,62 @@ describe('path round-tripping', () => {
     }
   });
 });
+
+describe('rectangles', () => {
+  const rect = (attributes: string) =>
+    parseSvg(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">` +
+        `<rect id="r" ${attributes} /></svg>`,
+    ).nodes[0]!;
+
+  /** Every point the path is built from, control points included. */
+  const points = (node: ReturnType<typeof rect>) =>
+    node.subpaths.flatMap((subpath) => [
+      subpath.start,
+      ...subpath.segments.flatMap((segment) => [segment.c1, segment.c2, segment.end]),
+    ]);
+
+  it('keeps a rounded rect inside its own box', () => {
+    const node = rect('x="3" y="13" width="4" height="8" rx="1"');
+
+    // The bug this guards against put a corner's control point a whole unit
+    // outside the shape: the smooth-cubic segments the shape-to-path helper
+    // emits were being reflected off the straight edges before them, which
+    // SVG only allows after another cubic. It drew a spike, and the box grew.
+    expect(node.bbox).toEqual({ x: 3, y: 13, width: 4, height: 8 });
+    for (const point of points(node)) {
+      expect(point.x).toBeGreaterThanOrEqual(3 - 1e-9);
+      expect(point.x).toBeLessThanOrEqual(7 + 1e-9);
+      expect(point.y).toBeGreaterThanOrEqual(13 - 1e-9);
+      expect(point.y).toBeLessThanOrEqual(21 + 1e-9);
+    }
+  });
+
+  it('rounds on both axes when only one radius is given', () => {
+    const fromRx = rect('width="8" height="6" rx="2"');
+    const fromRy = rect('width="8" height="6" ry="2"');
+    expect(subpathsToPathData(fromRy.subpaths, 3)).toBe(subpathsToPathData(fromRx.subpaths, 3));
+  });
+
+  it('clamps a radius larger than half the side', () => {
+    // rx=99 on a 10x4 rect is a stadium, not an inside-out shape.
+    const node = rect('width="10" height="4" rx="99"');
+    expect(node.bbox).toEqual({ x: 0, y: 0, width: 10, height: 4 });
+  });
+
+  it('leaves an unrounded rect square', () => {
+    const node = rect('x="10" y="8" width="4" height="13"');
+    expect(node.bbox).toEqual({ x: 10, y: 8, width: 4, height: 13 });
+    // A square outline puts every point, control points included, on one of
+    // the four edges — a rounded corner is exactly what would put one off them.
+    for (const point of points(node)) {
+      const onVerticalEdge = point.x === 10 || point.x === 14;
+      const onHorizontalEdge = point.y === 8 || point.y === 21;
+      expect(onVerticalEdge || onHorizontalEdge).toBe(true);
+    }
+  });
+
+  it('draws nothing for a rect with no area', () => {
+    expect(rect('width="0" height="5"')).toBeUndefined();
+  });
+});

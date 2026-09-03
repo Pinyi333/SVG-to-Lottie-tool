@@ -1,3 +1,5 @@
+import type { PresetName } from 'svgmotion';
+
 /**
  * Sample icons, so the tool is usable before a visitor has found a file.
  *
@@ -8,12 +10,23 @@ export interface Sample {
   id: string;
   label: string;
   svg: string;
+  /**
+   * The effect to switch to when this sample is loaded.
+   *
+   * A sample has to animate the moment it is clicked, and no single effect
+   * suits every drawing: stroke draw reveals an outline by animating its dash
+   * offset, so on artwork that is filled rather than stroked it runs correctly
+   * and shows nothing at all. Each sample therefore names an effect its own
+   * artwork can actually display.
+   */
+  effect: PresetName;
 }
 
 export const SAMPLES: Sample[] = [
   {
     id: 'check',
     label: 'Check',
+    effect: 'strokeDraw',
     svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle id="ring" cx="12" cy="12" r="10" />
   <path id="tick" d="M8 12.5 11 15.5 16.5 9" />
@@ -22,6 +35,7 @@ export const SAMPLES: Sample[] = [
   {
     id: 'bell',
     label: 'Bell',
+    effect: 'strokeDraw',
     svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <path id="body" d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
   <path id="clapper" d="M13.7 21a2 2 0 0 1-3.4 0" />
@@ -30,6 +44,8 @@ export const SAMPLES: Sample[] = [
   {
     id: 'chart',
     label: 'Chart',
+    // Filled bars: nothing to draw, but plenty to bounce.
+    effect: 'bounce',
     svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
   <rect id="bar-1" x="3" y="13" width="4" height="8" rx="1" fill="#a5b4fc" />
   <rect id="bar-2" x="10" y="8" width="4" height="13" rx="1" fill="#6366f1" />

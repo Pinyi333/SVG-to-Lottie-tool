@@ -128,8 +128,8 @@ pnpm install
 pnpm build        # 必須先 build，apps/web 是吃 core 的建置產物
 pnpm lint
 pnpm typecheck
-pnpm test         # core 179 + web 17
-pnpm test:e2e     # Playwright 11 個，跑在正式建置版本上
+pnpm test         # core 184 + web 23
+pnpm test:e2e     # Playwright 12 個，跑在正式建置版本上
 ```
 
 環境若已有 Chromium：`PLAYWRIGHT_CHROMIUM_PATH=/path/to/chromium pnpm test:e2e`
@@ -192,7 +192,18 @@ pnpm test:e2e     # Playwright 11 個，跑在正式建置版本上
 修法：把 `main` 加進 `Settings → Environments → github-pages → Deployment branches`（或把預設分支改成 `main`）。
 **辨認方式**：`deploy` job 的 steps 數量。0 steps = 被 environment 規則擋在門外；有 steps = 才是真的部署錯誤。
 
-**8. 同一個問題不要警告兩次。** 曾經 preset 驗證器和 Lottie 匯出器各報一次「這個形狀沒有 stroke」，措辭不同，看起來像兩個問題。已移除重複。
+**8. 圓角矩形的兩個角是錯的（`svg-path-commander` 的 `s` 指令處理）。**（2026-09-01 修正）
+症狀：`<rect rx="1">` 匯出後，左上角有缺口、右下角有尖刺；bbox 比原矩形還大。
+原因：`shapeToPathArray` 用 `h`／`v` 直線接 `s`（平滑三次曲線）來寫圓角矩形。SVG 規定 `s` 的第一個控制點只有在**前一個指令也是三次曲線**時才鏡射，否則等於目前點；但 `pathToCurve` 會先把直線轉成三次曲線、再照樣鏡射。4×8 的長條配 `rx="1"`，右下控制點會落到底邊下方一整個單位。
+修法：`rect` 改成自己產生路徑（和 `circle`／`ellipse` 早就這樣做的理由完全相同），順便正確處理 `rx`／`ry` 互相沿用與夾到半邊長的規則。
+**這是視覺才看得出來的 bug**——所有測試都是綠的，是把 Chart 樣本截圖下來看才發現形狀不對。
+
+**9. 樣本圖示要自帶合適的效果。**（2026-09-01 修正）
+症狀：點 Chart 樣本，畫面完全不動。
+原因：Chart 是三根**只有 fill、沒有 stroke** 的長條，而工作區預設效果是「線條描繪」。動畫確實有產生（在動 `stroke-dashoffset`），只是沒有線條可以描。引擎有發警告，但第一印象已經毀了。
+修法：每個樣本自己宣告效果（Chart → bounce），和 `examples/generate.mjs` 早就在做的一樣。
+
+**10. 同一個問題不要警告兩次。** 曾經 preset 驗證器和 Lottie 匯出器各報一次「這個形狀沒有 stroke」，措辭不同，看起來像兩個問題。已移除重複。
 
 ---
 

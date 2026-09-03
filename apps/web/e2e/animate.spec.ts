@@ -35,6 +35,21 @@ test('animates a sample icon and previews it', async ({ page }) => {
   await expect(preview.locator('path').first()).toBeVisible();
 });
 
+test('a sample brings the effect its own artwork can show', async ({ page }) => {
+  // The Chart sample is filled bars with no stroke. Stroke draw runs on it
+  // perfectly well and displays nothing, so loading it has to switch the
+  // effect as well as the artwork or the tool looks broken on first use.
+  await page.getByRole('button', { name: 'Chart' }).click();
+  await expect(page.getByLabel('Effect')).toHaveValue('bounce');
+  await expect(page.getByText('has no stroke')).toHaveCount(0);
+
+  // The sample buttons only exist in the empty state, so the stroked sample
+  // is checked from a fresh load rather than by switching in place.
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Check' }).click();
+  await expect(page.getByLabel('Effect')).toHaveValue('strokeDraw');
+});
+
 test('exports Lottie JSON that parses and describes the animation', async ({ page }) => {
   await uploadSvg(page);
 
